@@ -63,7 +63,8 @@ SecurePassVault is a simple command-line password manager to securely store, vie
 
 ## Author
 
-Atharv Sharma
-Email: atharv5873@gmail.com
-GitHub: [atharv5873](https://github.com/atharv5873)  
-LinkedIn: [https://www.linkedin.com/in/atharv-sharma-a3b6a0251/](https://www.linkedin.com/in/atharv-sharma-a3b6a0251/)
+**Atharv Sharma**  
+📧 Email: [atharv5873@gmail.com](mailto:atharv5873@gmail.com)  
+🐙 GitHub: [atharv5873](https://github.com/atharv5873)  
+🔗 LinkedIn: [Atharv Sharma](https://www.linkedin.com/in/atharv-sharma-a3b6a0251/)
+
