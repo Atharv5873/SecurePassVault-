@@ -1,8 +1,5 @@
 from operations import add_credential, view_credentials, show_password, delete_credential
-
-def menu():
-    while True:
-        print(r'''
+print(r'''
 
    _____ ______________  ______  __________  ___   ___________    _____   __  ____  ______   
   / ___// ____/ ____/ / / / __ \/ ____/ __ \/   | / ___/ ___/ |  / /   | / / / / / /_  __/   
@@ -12,6 +9,8 @@ def menu():
                                                                                              
 
 ''')
+def menu():
+    while True:
         print("1. Add Credential")
         print("2. View Credentials")
         print("3. Reveal Password")
@@ -43,6 +42,8 @@ def menu():
 
         else:
             print("Invalid choice. Try again.")
+
+        input("\nPress Enter to continue...\n") 
 
 if __name__ == "__main__":
     menu()
