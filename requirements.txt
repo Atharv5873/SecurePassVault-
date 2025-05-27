@@ -1,2 +1,12 @@
-pymongo
-cryptography
+altgraph==0.17.4
+cffi==1.17.1
+cryptography==45.0.3
+dnspython==2.7.0
+packaging==25.0
+pefile==2023.2.7
+pycparser==2.22
+pyinstaller==6.13.0
+pyinstaller-hooks-contrib==2025.4
+pymongo==4.13.0
+pywin32-ctypes==0.2.3
+setuptools==80.9.0
