@@ -11,13 +11,13 @@ def load_key():
         key=Fernet.generate_key()
         with open(KEY_FILE,"wb") as file:
             file.write(key)
-        return key;
+        return key
 
 SECRET_KEY=load_key()
-ciper=Fernet(SECRET_KEY)
+cipher=Fernet(SECRET_KEY)
 
 def encrypt_password(password):
-    return ciper.encrypt(password.encode()).decode()
+    return cipher.encrypt(password.encode()).decode()
 
-def decrpt_passwrod(password):
-    return ciper.decrypt(password.encode()).decode()
+def decrypt_password(token):
+    return cipher.decrypt(token.encode()).decode()
