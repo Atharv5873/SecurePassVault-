@@ -1,4 +1,5 @@
 from operations import add_credential, view_credentials, show_password, delete_credential
+from getpass import getpass
 print(r'''
 
    _____ ______________  ______  __________  ___   ___________    _____   __  ____  ______   
@@ -22,7 +23,7 @@ def menu():
         if choice == "1":
             site = input("Site: ")
             username = input("Username: ")
-            password = input("Password: ")
+            password = getpass("Password:")
             add_credential(site, username, password)
 
         elif choice == "2":
