@@ -30,7 +30,7 @@ def add_credential(cred:CredentialIn):
     })
     if result is None:
         raise HTTPException(status_code=409)
-    return {"id":str(result.inserted_id),"message":"Credential added Sucessfully."}
+    return {"id":str(result.inserted_id),"message":"Credential added Successfully."}
 
 @router.get("/view",status_code=status.HTTP_200_OK)
 def view_credentials():
@@ -56,3 +56,18 @@ def reveal_password(cred_id:str):
         raise HTTPException(status_code=404, detail="Credential not found.")
     except:
         raise HTTPException(status_code=404, detail="Invalid Credential ID")
+    
+@router.delete("/delete/{cred_id}", status_code=status.HTTP_200_OK)
+def delete_credential(cred_id: str):
+    credential = vault_collection.find_one({"_id": ObjectId(cred_id)})
+    if not credential:
+        raise HTTPException(status_code=404, detail="Credential not found")
+    result = vault_collection.delete_one({"_id": ObjectId(cred_id)})
+    if result.deleted_count > 0:
+        return {
+            "site": credential["site"],
+            "username": credential["username"],
+            "status": "Credential deleted successfully"
+        }
+    raise HTTPException(status_code=500, detail="Failed to delete credential")
+    
