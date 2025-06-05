@@ -2,3 +2,4 @@ __pycache__/
 env/
 key.key
 .env
+config.py
