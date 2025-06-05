@@ -20,6 +20,10 @@ class CredentialOut(BaseModel):
     username:str
     password:str
     
+@router.get("/")
+def start():
+    return "Hello"
+    
 @router.post("/add",status_code=status.HTTP_201_CREATED)
 def add_credential(cred:CredentialIn):
     encrypted_password=encrypt_password(cred.password)
