@@ -30,3 +30,13 @@ def add_credential(cred:CredentialIn):
     if result is None:
         raise HTTPException(status_code=409)
     return {"id":str(result.inserted_id),"message":"Credential added Sucessfully."}
+
+@router.get("/view",status_code=status.HTTP_200_OK)
+def view_credentials():
+    creds=vault_collection.find()
+    return [{
+        "id":str(c["_id"]),
+        "site":str(c["site"]),
+        "username":str(c["username"]),
+        "password(encrypted)":str(c["password"])
+    }for c in creds]
