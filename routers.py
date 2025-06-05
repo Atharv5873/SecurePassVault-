@@ -1,0 +1,32 @@
+from fastapi import APIRouter,HTTPException
+from pydantic import BaseModel
+from starlette import status
+from encryptor import encrypt_password,decrypt_password
+from db_config import vault_collection
+
+
+
+router=APIRouter()
+
+class CredentialIn(BaseModel):
+    site:str
+    username:str
+    password:str
+    
+class CredentialOut(BaseModel):
+    id:str
+    site:str
+    username:str
+    password:str
+    
+@router.post("/add",status_code=status.HTTP_201_CREATED)
+def add_credential(cred:CredentialIn):
+    encrypted_password=encrypt_password(cred.password)
+    result=vault_collection.insert_one({
+        "site":cred.site,
+        "username":cred.username,
+        "password":encrypted_password
+    })
+    if result is None:
+        raise HTTPException(status_code=409)
+    return {"id":str(result.inserted_id),"message":"Credential added Sucessfully."}
