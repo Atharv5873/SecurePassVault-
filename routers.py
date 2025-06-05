@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from starlette import status
 from encryptor import encrypt_password,decrypt_password
 from db_config import vault_collection
+from bson import ObjectId
 
 
 
@@ -40,3 +41,18 @@ def view_credentials():
         "username":str(c["username"]),
         "password(encrypted)":str(c["password"])
     }for c in creds]
+
+@router.get("/reveal/{cred_id}",status_code=status.HTTP_200_OK)
+def reveal_password(cred_id:str):
+    try:
+        cred=vault_collection.find_one({"_id": ObjectId(cred_id)})
+        if cred:
+            password=decrypt_password(cred["password"])
+            return {
+                "site":cred["site"],
+                "username":cred["username"],
+                "password":password
+            }
+        raise HTTPException(status_code=404, detail="Credential not found.")
+    except:
+        raise HTTPException(status_code=404, detail="Invalid Credential ID")
