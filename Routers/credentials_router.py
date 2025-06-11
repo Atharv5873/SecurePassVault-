@@ -7,12 +7,8 @@ from db_config import vault_collection
 from bson import ObjectId
 
 router=APIRouter(prefix="/credentials",tags=["Credentials"])
-
-@router.get("/")
-def start():
-    return "Hello"
     
-@router.post("/add",status_code=status.HTTP_201_CREATED)
+@router.post("/",status_code=status.HTTP_201_CREATED)
 def add_credential(cred:CredentialIn,user_id:str=Depends(get_current_user)):
     encrypted_password=encrypt_password(cred.password)
     result=vault_collection.insert_one({
@@ -25,7 +21,7 @@ def add_credential(cred:CredentialIn,user_id:str=Depends(get_current_user)):
         raise HTTPException(status_code=409)
     return {"id":str(result.inserted_id),"message":"Credential added Successfully."}
 
-@router.get("/view",status_code=status.HTTP_200_OK)
+@router.get("/",status_code=status.HTTP_200_OK)
 def view_credentials(user_id:str=Depends(get_current_user)):
     creds=vault_collection.find({"user_id":user_id})
     return [{

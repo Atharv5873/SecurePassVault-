@@ -4,10 +4,12 @@ from datetime import datetime, timedelta
 from jose import JWTError, jwt
 import bcrypt
 from db_config import db
+import os
+from dotenv import load_dotenv
 
 oauth2_scheme=OAuth2PasswordBearer(tokenUrl="auth/token")
 
-SECRET_KEY="thisisthesecret"
+SECRET_KEY=str(os.getenv("SECRET"))
 ALGORITHM="HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES=30
 
