@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from routers import router
+from Routers import credentials_router,auth_router
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(title="SecurePassVault API")
@@ -12,4 +12,5 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(router)
+app.include_router(auth_router.router)
+app.include_router(credentials_router.router)
