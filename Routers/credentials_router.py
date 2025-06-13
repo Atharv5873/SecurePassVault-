@@ -28,7 +28,7 @@ def view_credentials(user_id:str=Depends(get_current_user)):
         "id":str(c["_id"]),
         "site":str(c["site"]),
         "username":str(c["username"]),
-        "password(encrypted)":str(c["password"]) ## Why reveal the hashed pw 
+        ## "password(encrypted)":str(c["password"]) ## Why reveal the hashed pw 
     }for c in creds]
 
 @router.get("/reveal/{cred_id}",status_code=status.HTTP_200_OK)
