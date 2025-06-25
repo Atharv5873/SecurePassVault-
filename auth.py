@@ -1,6 +1,7 @@
 from fastapi import Depends,HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from datetime import datetime, timedelta
+from cryptography.fernet import Fernet
 from jose import JWTError, jwt
 import bcrypt
 from db_config import db
@@ -17,9 +18,11 @@ users_collection=db["users"]
 
 def create_user(username,password):
     hashed=bcrypt.hashpw(password.encode(),bcrypt.gensalt())
+    fernet_key=Fernet.generate_key()
     user={
         "username":username,
-        "password":hashed
+        "password":hashed,
+        "key":fernet_key
     }
     users_collection.insert_one(user)
     

@@ -1,62 +1,51 @@
-from fastapi import APIRouter,HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends
 from models import CredentialIn
 from auth import get_current_user
 from starlette import status
-from encryptor import encrypt_password,decrypt_password
-from db_config import vault_collection
-from bson import ObjectId
+from operations import (
+    add_credential as op_add_credential,
+    view_credentials as op_view_credentials,
+    reveal_password as op_reveal_password,
+    delete_credential as op_delete_credential
+)
 
-router=APIRouter(prefix="/credentials",tags=["Credentials"])
-    
-@router.post("/",status_code=status.HTTP_201_CREATED)
-def add_credential(cred:CredentialIn,user_id:str=Depends(get_current_user)):
-    encrypted_password=encrypt_password(cred.password)
-    result=vault_collection.insert_one({
-        "user_id":user_id,
-        "site":cred.site,
-        "username":cred.username,
-        "password":encrypted_password
-    })
-    if result is None:
-        raise HTTPException(status_code=409)
-    return {"id":str(result.inserted_id),"message":"Credential added Successfully."}
+router = APIRouter(prefix="/credentials", tags=["Credentials"])
 
-@router.get("/",status_code=status.HTTP_200_OK)
-def view_credentials(user_id:str=Depends(get_current_user)):
-    creds=vault_collection.find({"user_id":user_id})
-    return [{
-        "id":str(c["_id"]),
-        "site":str(c["site"]),
-        "username":str(c["username"]),
-        ## "password(encrypted)":str(c["password"]) ## Why reveal the hashed pw 
-    }for c in creds]
-
-@router.get("/reveal/{cred_id}",status_code=status.HTTP_200_OK)
-def get_password(cred_id:str,user_id:str=Depends(get_current_user)):
+@router.post("/", status_code=status.HTTP_201_CREATED)
+def add_credential(cred: CredentialIn, user_id: str = Depends(get_current_user)):
     try:
-        cred=vault_collection.find_one({"_id": ObjectId(cred_id),"user_id":user_id})
-        if cred:
-            password=decrypt_password(cred["password"])
-            return {
-                "site":cred["site"],
-                "username":cred["username"],
-                "password":password
-            }
-        raise HTTPException(status_code=404, detail="Credential not found.")
-    except:
-        raise HTTPException(status_code=404, detail="Invalid Credential ID")
-    
-@router.delete("/delete/{cred_id}", status_code=status.HTTP_200_OK)
-def delete_credential(cred_id: str,user_id: str = Depends(get_current_user)):
-    credential = vault_collection.find_one({"_id": ObjectId(cred_id),"user_id":user_id})
-    if not credential:
-        raise HTTPException(status_code=404, detail="Credential not found")
-    result = vault_collection.delete_one({"_id": ObjectId(cred_id)})
-    if result.deleted_count > 0:
+        inserted_id = op_add_credential(cred.site, cred.username, cred.password, user_id)
         return {
-            "site": credential["site"],
-            "username": credential["username"],
-            "status": "Credential deleted successfully"
+            "id": inserted_id,
+            "message": "Credential added successfully"
         }
-    raise HTTPException(status_code=500, detail="Failed to delete credential")
-    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+
+@router.get("/", status_code=status.HTTP_200_OK)
+def view(user_id: str = Depends(get_current_user)):
+    try:
+        return op_view_credentials(user_id)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+
+@router.get("/reveal/{cred_id}", status_code=status.HTTP_200_OK)
+def reveal(cred_id: str, user_id: str = Depends(get_current_user)):
+    result = op_reveal_password(cred_id, user_id)
+    if result:
+        return result
+    else:
+        raise HTTPException(status_code=404, detail="Credential not found or access denied")
+
+@router.delete("/delete/{cred_id}", status_code=status.HTTP_200_OK)
+def delete_cred(cred_id: str, user_id: str = Depends(get_current_user)):
+    result = op_delete_credential(cred_id, user_id)
+    if result is None:
+        raise HTTPException(status_code=404, detail="Credential not found or access denied")
+    elif result is False:
+        raise HTTPException(status_code=500, detail="Failed to delete credential")
+    return {
+        "site": result["site"],
+        "username": result["username"],
+        "status": "Credential deleted successfully"
+    }
