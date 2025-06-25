@@ -7,6 +7,8 @@ import bcrypt
 from db_config import db
 import os
 from dotenv import load_dotenv
+from bson import ObjectId
+
 
 oauth2_scheme=OAuth2PasswordBearer(tokenUrl="auth/token")
 
@@ -16,17 +18,19 @@ ACCESS_TOKEN_EXPIRE_MINUTES=30
 
 users_collection=db["users"]
 
-def create_user(username,password):
-    email=username.strip().lower()
+def create_user(username, password, salt, is_admin=False):
+    email = username.strip().lower()
     existing_user = users_collection.find_one({"username": email})
     if existing_user:
         raise HTTPException(status_code=400, detail="Email already registered")
-    hashed=bcrypt.hashpw(password.encode(),bcrypt.gensalt())
-    fernet_key=Fernet.generate_key()
-    user={
-        "username":email,
-        "password":hashed,
-        "key":fernet_key
+    hashed = bcrypt.hashpw(password.encode(), bcrypt.gensalt())
+    fernet_key = Fernet.generate_key()
+    user = {
+        "username": email,
+        "password": hashed,
+        "key": fernet_key,
+        "salt": salt,
+        "is_admin": is_admin
     }
     users_collection.insert_one(user)
     
@@ -53,4 +57,10 @@ def get_current_user(token:str=Depends(oauth2_scheme)):
     except JWTError:
         raise HTTPException(status_code=401,detail="Invalid Token")
         
+def get_current_admin(user_id: str = Depends(get_current_user)):
+    user = users_collection.find_one({"_id": ObjectId(user_id)})
+    if not user or not user.get("is_admin"):
+        raise HTTPException(status_code=403, detail="Admin access required")
+    return user_id
+
     
