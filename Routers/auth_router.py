@@ -1,9 +1,10 @@
 from fastapi import APIRouter,HTTPException, Depends, Query
-from models import UserLogin,UserRegister
+from models import UserRegister
 from fastapi.security import OAuth2PasswordRequestForm
 from auth import create_access_token,create_user,authenticate_user,get_current_user
 from starlette import status
 from db_config import db
+from bson import ObjectId
 
 users_collection=db["users"]
 
@@ -22,9 +23,16 @@ def user_login(form_data: OAuth2PasswordRequestForm = Depends()):
     return {"access_token": token, "token_type": "bearer"}
 
 @router.get("/salt")
-def get_salt(username:str=Query(...)):
-    user=users_collection.find_one({"username":username})
+def get_salt(username:str=Query(...),user_id:str=Depends(get_current_user)):
+    username = username.strip().lower()
+    user = users_collection.find_one({"_id": ObjectId(user_id)})
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    return {"salt":user["salt"]}
+    if user["username"] != username:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You can only access your own salt."
+        )
+    return {"salt": user["salt"]}
+
     
