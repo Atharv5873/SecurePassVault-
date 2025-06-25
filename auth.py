@@ -17,17 +17,22 @@ ACCESS_TOKEN_EXPIRE_MINUTES=30
 users_collection=db["users"]
 
 def create_user(username,password):
+    email=username.strip().lower()
+    existing_user = users_collection.find_one({"username": email})
+    if existing_user:
+        raise HTTPException(status_code=400, detail="Email already registered")
     hashed=bcrypt.hashpw(password.encode(),bcrypt.gensalt())
     fernet_key=Fernet.generate_key()
     user={
-        "username":username,
+        "username":email,
         "password":hashed,
         "key":fernet_key
     }
     users_collection.insert_one(user)
     
 def authenticate_user(username,password):
-    user=users_collection.find_one({"username":username})
+    email=username.strip().lower()
+    user=users_collection.find_one({"username":email})
     if not user or not bcrypt.checkpw(password.encode(),user["password"]):
         return None
     return user
