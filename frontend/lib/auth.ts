@@ -67,8 +67,7 @@ export async function login(
         }
 
         // 4. Store JWT/token (optional)
-        const data = await res.json();
-        setCookie('token', data.token); // Optional, handled elsewhere if needed
+        const data = await res.json();// Optional, handled elsewhere if needed
 
         // 5. Store derived key in context
         setDerivedKey(key);
@@ -86,7 +85,4 @@ export async function logout() {
 
         toast.success('Logged out successfully');
   }
-function setCookie(arg0: string, token: any) {
-    throw new Error('Function not implemented.');
-}
 
