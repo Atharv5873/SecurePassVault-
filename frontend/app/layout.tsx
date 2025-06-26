@@ -1,7 +1,5 @@
 import "./globals.css";
 import type { Metadata } from "next";
-import { Analytics } from "@vercel/analytics/next";
-import { SpeedInsights } from "@vercel/speed-insights/next";
 import Head from "next/head";
 import { ThemeProvider } from "next-themes";
 import { CryptoProvider } from "@/contexts/cryptocontext";
