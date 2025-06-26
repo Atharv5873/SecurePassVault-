@@ -1,0 +1,49 @@
+{
+  "name": "cyber-cordon",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\"",
+    "dev:frontend": "next dev",
+    "dev:backend": "cd secure-pass-backend && npm run start",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "@react-three/drei": "^9.122.0",
+    "@react-three/fiber": "^8.18.0",
+    "@shadcn/ui": "latest",
+    "@types/react": "^18.3.21",
+    "@types/react-dom": "^18.3.7",
+    "@vercel/analytics": "^1.5.0",
+    "@vercel/speed-insights": "^1.2.0",
+    "axios": "^1.10.0",
+    "clsx": "^2.1.1",
+    "crypto-js": "^4.2.0",
+    "framer-motion": "^10.0.0",
+    "gsap": "^3.11.0",
+    "lucide-react": "^0.511.0",
+    "mongodb": "^6.17.0",
+    "next": "^15.3.2",
+    "next-themes": "^0.4.6",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-hot-toast": "^2.5.2",
+    "tailwind-merge": "^3.3.0",
+    "three": "^0.166.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.7",
+    "@types/crypto-js": "^4.2.2",
+    "@types/node": "^22.15.19",
+    "@types/webxr": "^0.5.22",
+    "autoprefixer": "^10.4.21",
+    "concurrently": "^7.6.0",
+    "cssnano": "^7.0.7",
+    "eslint": "^9.27.0",
+    "eslint-config-next": "^15.3.2",
+    "postcss": "^8.5.3",
+    "tailwindcss": "^4.1.7",
+    "typescript": "5.8.3"
+  }
+}
