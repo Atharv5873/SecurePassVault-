@@ -66,8 +66,6 @@ export async function login(
             return;
         }
 
-        // 4. Store JWT/token (optional)
-        const data = await res.json();// Optional, handled elsewhere if needed
 
         // 5. Store derived key in context
         setDerivedKey(key);
