@@ -45,7 +45,7 @@ export default function HomePage() {
           <div className="p-6 bg-slate-800 rounded-xl border border-teal-600/30 shadow">
             <h3 className="text-xl font-semibold text-teal-300 mb-2">Trustless by Design</h3>
             <p className="text-slate-300 text-sm">
-              Designed with security-first principles — we can't read, retrieve, or misuse your data.
+              Designed with security-first principles — we can&apos;t read, retrieve, or misuse your data.
             </p>
           </div>
         </div>

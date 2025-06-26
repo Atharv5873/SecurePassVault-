@@ -3,11 +3,12 @@ import { useState } from 'react';
 import toast from 'react-hot-toast';
 import { encryptData } from '@/lib/crypto/encryptdata';
 import { useCrypto } from '@/contexts/cryptocontext';
+import { VaultEntry } from '@/app/types/vault';
 
 
 type VaultFormProps = {
     userToken: string;
-    onNewEntry: (entry: any) => void;
+    onNewEntry: (entry: VaultEntry) => void;
 };
 
 export default function VaultForm({ userToken, onNewEntry }: VaultFormProps) {

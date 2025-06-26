@@ -43,7 +43,7 @@ export default function LoginPage() {
                     typeof data.detail === 'string'
                         ? data.detail
                         : Array.isArray(data.detail)
-                            ? data.detail.map((d: { msg: any }) => d.msg).join(', ')
+                            ? data.detail.map((d: { msg: string }) => d.msg).join(', ')
                             : data.message || 'Login failed';
                 toast.error(errorMsg);
                 return;

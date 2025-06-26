@@ -4,10 +4,13 @@ import { useRouter } from 'next/navigation';
 import VaultForm from '@/components/vaultform';
 import VaultDisplay from '@/components/VaultDisplay';
 import LogoutButton from '@/components/logoutbutton';
+import type { VaultEntry } from '../types/vault';
+
+
 
 export default function VaultPage() {
     const [token, setToken] = useState<string | null>(null);
-    const [entries, setEntries] = useState<any[]>([]);
+    const [entries, setEntries] = useState<VaultEntry[]>([]);
     const router = useRouter();
 
     useEffect(() => {
@@ -21,7 +24,7 @@ export default function VaultPage() {
     }, []);
     
 
-    const handleNewEntry = (newEntry: any) => {
+    const handleNewEntry = (newEntry: VaultEntry) => {
         setEntries((prev) => [...prev, newEntry]);
     };
 

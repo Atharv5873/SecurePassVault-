@@ -22,7 +22,7 @@ export async function getEncryptedPasswords() {
     return res.json();
 }
 
-export async function savePassword(data: any) {
+export async function savePassword(data: string) {
     return fetch(`${API_BASE}/vault`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify(data)
     });
