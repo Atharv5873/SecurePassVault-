@@ -35,3 +35,8 @@ def rename_user(user_id: str, new_email: str, admin_id: str = Depends(get_curren
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="User not found")
     return {"message": "User renamed successfully"}
+
+@router.get("/user-count", include_in_schema=True)
+def get_user_count():
+    count = users_collection.count_documents({})
+    return {"total_users": count}
