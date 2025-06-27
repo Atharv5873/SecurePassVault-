@@ -2,18 +2,25 @@
 const nextConfig = {
   reactStrictMode: true,
   async rewrites() {
+    const apiBaseUrl = process.env.API_BASE_URL || 'https://securepassvault-1.onrender.com';
+    console.log('API Base URL:', apiBaseUrl);
+
     return [
       {
         source: '/credentials',
-        destination: `${process.env.API_BASE_URL}/credentials/`,
+        destination: `${apiBaseUrl}/credentials/`,
       },
       {
         source: '/auth/:path*',
-        destination: `${process.env.API_BASE_URL}/auth/:path*`
+        destination: `${apiBaseUrl}/auth/:path*`
+      },
+      {
+        source: '/admin/:path*',
+        destination: `${apiBaseUrl}/admin/:path*`
       },
       {
         source: '/credentials/:path*',
-        destination: `${process.env.API_BASE_URL}/credentials/:path*`
+        destination: `${apiBaseUrl}/credentials/:path*`
       }
     ];
   },

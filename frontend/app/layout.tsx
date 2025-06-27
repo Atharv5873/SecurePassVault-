@@ -1,10 +1,10 @@
 import "./globals.css";
 import type { Metadata } from "next";
-import Head from "next/head";
 import { ThemeProvider } from "next-themes";
 import { CryptoProvider } from "@/contexts/cryptocontext";
 import { Toaster } from "react-hot-toast";
-import Navbar from "@/components/navbar";
+import Link from "next/link";
+// import Navbar from "@/components/navbar";
 
 export const metadata: Metadata = {
     title: "Cyber Cordon | VAPT for Web Applications",
@@ -77,7 +77,7 @@ export default function RootLayout({
 
     return (
         <html lang="en">
-            <Head>
+            <head>
                 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
                 <link rel="icon" href="/favicon.ico" />
                 <script
@@ -88,13 +88,15 @@ export default function RootLayout({
                     type="application/ld+json"
                     dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
                 />
-            </Head>
-
+            </head>
             <body className="flex flex-col min-h-screen bg-gradient-to-b from-gray-900 to-black text-gray-100">
                 <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
-                    <Navbar />
+                    {/* <Navbar /> */}
                     <CryptoProvider>
-                {children}
+                        {children}
+                        <footer className="w-full mt-auto py-6 text-center text-xs text-gray-400 border-t border-gray-800 bg-black/70 backdrop-blur-sm">
+                            © 2025 Cyber Cordon. All rights reserved. | Empowering Security for a Safer India
+                        </footer>
                         <Toaster position="top-right" />
                     </CryptoProvider>
                 </ThemeProvider>

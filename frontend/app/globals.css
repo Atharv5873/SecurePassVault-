@@ -1,8 +1,13 @@
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&display=swap');
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --black: #0a0a0a;
+  --neon: #2d91d4;
+  --white: #fff;
+  --gray: #b0b0b0;
+  --panel-dark: #101112;
+  --panel-glow: #1a1f1a;
 }
 
 :root {
@@ -20,9 +25,11 @@
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--black);
+  color: var(--white);
+  font-family: 'Space Grotesk', 'Inter', Arial, Helvetica, sans-serif;
+  margin: 0;
+  padding: 0;
   cursor: default;
 }
 
@@ -33,7 +40,6 @@ body {
 html {
   scroll-behavior: smooth;
 }
-
 
 .loading-progress {
   background-color: #3a5483;
@@ -62,4 +68,40 @@ progress.loading-progress {
   -moz-appearance: none;
   appearance: none;
   border: none;
+}
+
+.split-left {
+  background: var(--panel-dark);
+  color: var(--white);
+}
+
+.split-right {
+  background: linear-gradient(120deg, var(--panel-glow) 60%, #1a1f1a 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.neon-text {
+  color: var(--neon);
+  text-shadow: 0 0 8px var(--neon), 0 0 24px var(--neon);
+}
+
+.neon-glow {
+  box-shadow: 0 0 60px 10px var(--neon), 0 0 120px 40px var(--neon);
+}
+
+.accent-line {
+  display: block;
+  height: 2px;
+  width: 80px;
+  background: var(--neon);
+  margin: 1.5rem 0 0.5rem 0;
+  border-radius: 2px;
+}
+
+.stat-number {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--neon);
+  letter-spacing: 0.05em;
 }
