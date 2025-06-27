@@ -35,4 +35,15 @@ def get_salt(username:str=Query(...),user_id:str=Depends(get_current_user)):
         )
     return {"salt": user["salt"]}
 
+@router.get("/me")
+def get_user_info(user_id: str = Depends(get_current_user)):
+    user = users_collection.find_one({"_id": ObjectId(user_id)})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return {
+        "id": str(user["_id"]),
+        "email": user["username"],
+        "is_admin": user.get("is_admin", False)
+    }
+
     
