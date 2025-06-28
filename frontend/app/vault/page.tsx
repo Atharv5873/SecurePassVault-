@@ -29,7 +29,7 @@ export default function VaultPage() {
                 setUserEmail(savedEmail);
             }
         }
-    }, []);
+    }, [router]);
 
     const handleNewEntry = (newEntry: VaultEntry) => {
         setEntries((prev) => [...prev, newEntry]);

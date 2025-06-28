@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Copy, Eye, EyeOff, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useCrypto } from '@/contexts/cryptocontext';
@@ -26,7 +26,7 @@ export default function VaultDisplay({ userToken, entries, setEntries, onEntries
     const [isLoading, setIsLoading] = useState(false);
     const [hasLoaded, setHasLoaded] = useState(false);
 
-    const fetchEntries = async () => {
+    const fetchEntries = useCallback(async () => {
         try {
             console.log('Fetching entries...');
             setIsLoading(true);
@@ -66,13 +66,13 @@ export default function VaultDisplay({ userToken, entries, setEntries, onEntries
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [userToken, onEntriesLoaded, setEntries]);
 
     useEffect(() => {
         if (userToken) {
             fetchEntries();
         }
-    }, [userToken]);
+    }, [userToken, fetchEntries]);
 
     if (isLoading) {
         return (

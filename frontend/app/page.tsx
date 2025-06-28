@@ -214,7 +214,7 @@ export default function Home() {
             priority
           />
           <div className="text-base lg:text-lg font-medium mb-12 lg:mb-16 text-gray-300 text-center max-w-2xl px-4">
-            The safest place to store your passwords —<br />zero-knowledge architecture & two-layer encryption.
+            The safest place to store your passwords —<br />zero-knowledge architecture &amp; two-layer encryption.
           </div>
           {/* Register and Login Buttons */}
           <div className="flex flex-col sm:flex-row gap-6 lg:gap-12 mb-12 lg:mb-16">
@@ -251,7 +251,7 @@ export default function Home() {
             </div>
             <div className="flex flex-col items-start text-left w-full max-w-md">
               <h3 className="text-lg font-bold neon-text mb-2">Trustless by Design</h3>
-              <p className="text-gray-300 text-sm">Designed with security-first principles — we can't read, retrieve, or misuse your data.</p>
+              <p className="text-gray-300 text-sm">Designed with security-first principles — we can&apos;t read, retrieve, or misuse your data.</p>
             </div>
           </div>
         </div>

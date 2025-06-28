@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { Trash2, Edit, Users, Shield, LogOut } from 'lucide-react';
@@ -18,12 +18,7 @@ export default function AdminPage() {
     const [newEmail, setNewEmail] = useState('');
     const router = useRouter();
 
-    useEffect(() => {
-        checkAdminAccess();
-        fetchUsers();
-    }, []);
-
-    const checkAdminAccess = async () => {
+    const checkAdminAccess = useCallback(async () => {
         const token = sessionStorage.getItem('token');
         if (!token) {
             console.log('No token found, redirecting to home');
@@ -61,7 +56,12 @@ export default function AdminPage() {
             console.log('Error checking admin access:', err);
             router.push('/');
         }
-    };
+    }, [router]);
+
+    useEffect(() => {
+        checkAdminAccess();
+        fetchUsers();
+    }, [checkAdminAccess]);
 
     const fetchUsers = async () => {
         const token = sessionStorage.getItem('token');
@@ -80,7 +80,7 @@ export default function AdminPage() {
             } else {
                 toast.error('Failed to fetch users');
             }
-        } catch (err) {
+        } catch {
             toast.error('Error fetching users');
         } finally {
             setLoading(false);
@@ -110,7 +110,7 @@ export default function AdminPage() {
                 const data = await res.json();
                 toast.error(data.detail || 'Failed to delete user');
             }
-        } catch (err) {
+        } catch {
             toast.error('Error deleting user');
         }
     };
@@ -140,7 +140,7 @@ export default function AdminPage() {
                 const data = await res.json();
                 toast.error(data.detail || 'Failed to rename user');
             }
-        } catch (err) {
+        } catch {
             toast.error('Error renaming user');
         }
     };

@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Shield, Lock, Eye, Code, Users, Globe, Award, Zap } from 'lucide-react';
+import { Shield, Lock, Eye, Code, Users, Award, Zap } from 'lucide-react';
 
 const devs = [
     {
@@ -71,7 +71,7 @@ export default function AboutUsPage() {
                                     <Shield className="w-5 h-5 text-[color:var(--neon)] mt-1 flex-shrink-0" />
                                     <div>
                                         <h3 className="text-lg font-semibold text-white">Zero-Knowledge Architecture</h3>
-                                        <p className="text-gray-300 text-sm">Your data is encrypted before it even leaves your device. Not even we can access your passwords — and that's by design.</p>
+                                        <p className="text-gray-300 text-sm">Your data is encrypted before it even leaves your device. Not even we can access your passwords — and that&apos;s by design.</p>
                                     </div>
                                 </div>
                                 <div className="flex items-start space-x-3">
@@ -85,7 +85,7 @@ export default function AboutUsPage() {
                                     <Eye className="w-5 h-5 text-[color:var(--neon)] mt-1 flex-shrink-0" />
                                     <div>
                                         <h3 className="text-lg font-semibold text-white">Trustless by Design</h3>
-                                        <p className="text-gray-300 text-sm">We can't read, retrieve, or misuse your data. Even if our systems were compromised, your secrets remain safe.</p>
+                                        <p className="text-gray-300 text-sm">We can&apos;t read, retrieve, or misuse your data. Even if our systems were compromised, your secrets remain safe.</p>
                                     </div>
                                 </div>
                                 <div className="flex items-start space-x-3">
@@ -99,7 +99,7 @@ export default function AboutUsPage() {
                         </div>
 
                         <div className="text-center pt-6">
-                            <h3 className="text-xl font-bold neon-text">🧩 Your credentials. Your vault. Nobody else's business.</h3>
+                            <h3 className="text-xl font-bold neon-text">🧩 Your credentials. Your vault. Nobody else&apos;s business.</h3>
                         </div>
                     </div>
 
@@ -181,7 +181,7 @@ export default function AboutUsPage() {
                     <div className="max-w-4xl mx-auto">
                         <h3 className="text-3xl font-bold neon-text mb-6">🌍 Our Mission</h3>
                         <p className="text-xl text-gray-300 leading-relaxed mb-6">
-                            Focusing on trust, security, and clarity, Cyber Cordon is committed to empowering individuals, developers, and businesses to build safer digital systems. We're contributing to a more resilient, secure India — one bug fix, one product, and one breakthrough at a time.
+                            Focusing on trust, security, and clarity, Cyber Cordon is committed to empowering individuals, developers, and businesses to build safer digital systems. We&apos;re contributing to a more resilient, secure India — one bug fix, one product, and one breakthrough at a time.
                         </p>
                         <h4 className="text-2xl font-bold neon-text">
                             Cyber Cordon — Empowering Security for a Safer India
