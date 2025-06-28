@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect, useState, useCallback, useRef } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Copy, Eye, EyeOff, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useCrypto } from '@/contexts/cryptocontext';
