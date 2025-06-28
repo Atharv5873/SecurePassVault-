@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { Copy, Eye, EyeOff, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useCrypto } from '@/contexts/cryptocontext';
@@ -25,54 +25,68 @@ export default function VaultDisplay({ userToken, entries, setEntries, onEntries
     const [visiblePasswords, setVisiblePasswords] = useState<Set<string>>(new Set());
     const [isLoading, setIsLoading] = useState(false);
     const [hasLoaded, setHasLoaded] = useState(false);
+    const setEntriesRef = useRef(setEntries);
+    const onEntriesLoadedRef = useRef(onEntriesLoaded);
+    const hasInitializedRef = useRef(false);
 
-    const fetchEntries = useCallback(async () => {
-        try {
-            console.log('Fetching entries...');
-            setIsLoading(true);
-
-            const res = await fetch(`https://securepassvault-1.onrender.com/credentials`, {
-                headers: {
-                    Authorization: `Bearer ${userToken}`,
-                },
-            });
-
-            console.log('Response status:', res.status);
-            console.log('Response headers:', res.headers);
-
-            const data = await res.json(); // Will fail if it's not JSON
-            console.log('Fetched data:', data);
-
-            if (!res.ok) {
-                console.error('API Error:', res.status, data);
-                throw new Error(`API Error: ${res.status} - ${data.detail || 'Unknown error'}`);
-            }
-
-            if (!Array.isArray(data)) {
-                console.error('Invalid data format:', data);
-                throw new Error('Invalid response format');
-            }
-
-            setEntries(data);
-            console.log('Entries set:', data);
-            setHasLoaded(true);
-            if (onEntriesLoaded) {
-                onEntriesLoaded(data);
-            }
-        } catch (err) {
-            console.error('[Vault Fetch Error]', err);
-            toast.error(`Error loading entries: ${err instanceof Error ? err.message : 'Unknown error'}`);
-            setHasLoaded(true);
-        } finally {
-            setIsLoading(false);
-        }
-    }, [userToken, onEntriesLoaded, setEntries]);
+    // Update refs when props change
+    useEffect(() => {
+        setEntriesRef.current = setEntries;
+        onEntriesLoadedRef.current = onEntriesLoaded;
+    }, [setEntries, onEntriesLoaded]);
 
     useEffect(() => {
-        if (userToken) {
+        console.log('VaultDisplay useEffect triggered', { userToken: !!userToken, hasLoaded });
+
+        if (userToken && !hasLoaded && !hasInitializedRef.current) {
+            console.log('Calling fetchEntries...');
+            hasInitializedRef.current = true;
+
+            const fetchEntries = async () => {
+                try {
+                    console.log('Fetching entries...');
+                    setIsLoading(true);
+
+                    const res = await fetch(`https://securepassvault-1.onrender.com/credentials`, {
+                        headers: {
+                            Authorization: `Bearer ${userToken}`,
+                        },
+                    });
+
+                    console.log('Response status:', res.status);
+                    console.log('Response headers:', res.headers);
+
+                    const data = await res.json(); // Will fail if it's not JSON
+                    console.log('Fetched data:', data);
+
+                    if (!res.ok) {
+                        console.error('API Error:', res.status, data);
+                        throw new Error(`API Error: ${res.status} - ${data.detail || 'Unknown error'}`);
+                    }
+
+                    if (!Array.isArray(data)) {
+                        console.error('Invalid data format:', data);
+                        throw new Error('Invalid response format');
+                    }
+
+                    setEntriesRef.current(data);
+                    console.log('Entries set:', data);
+                    setHasLoaded(true);
+                    if (onEntriesLoadedRef.current) {
+                        onEntriesLoadedRef.current(data);
+                    }
+                } catch (err) {
+                    console.error('[Vault Fetch Error]', err);
+                    toast.error(`Error loading entries: ${err instanceof Error ? err.message : 'Unknown error'}`);
+                    setHasLoaded(true);
+                } finally {
+                    setIsLoading(false);
+                }
+            };
+
             fetchEntries();
         }
-    }, [userToken, fetchEntries]);
+    }, [userToken, hasLoaded]);
 
     if (isLoading) {
         return (

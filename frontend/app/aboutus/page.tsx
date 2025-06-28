@@ -9,13 +9,13 @@ const devs = [
         name: "Atharv Sharma",
         role: "Backend Engineer & Security Researcher",
         image: "/ath.jpg",
-        linkedin: "https://www.linkedin.com/in/atharv-sharma-cybercordon/"
+        linkedin: "https://www.linkedin.com/in/atharv-sharma-a3b6a0251/"
     },
     {
         name: "Vatanesh Sharma",
-        role: "Full-Stack Developer & Ethical Hacker",
+        role: "Front-End Developer & Ethical Hacker",
         image: "/vat.jpg",
-        linkedin: "https://www.linkedin.com/in/vatanesh-sharma-cybercordon/"
+        linkedin: "https://www.linkedin.com/in/vatanesh-sharma-a39a2a22a/"
     }
 ];
 
