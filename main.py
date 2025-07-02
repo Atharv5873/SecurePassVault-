@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from Routers import credentials_router,auth_router,admin_router
+from Routers import credentials_router,auth_router,admin_router,utils_router
 from fastapi.middleware.cors import CORSMiddleware
 from apscheduler.schedulers.background import BackgroundScheduler
 import httpx
@@ -17,6 +17,7 @@ app.add_middleware(
 app.include_router(auth_router.router)
 app.include_router(credentials_router.router)
 app.include_router(admin_router.router)
+app.include_router(utils_router.router)
 
 def ping_site():
     try:
