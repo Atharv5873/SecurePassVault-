@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface CrackTimes {
     [method: string]: string;
@@ -14,11 +15,10 @@ interface PasswordStrengthResult {
     estimted_crack_times: CrackTimes;
     verdict: string;
 }
-  
+
 export default function PasswordChecker() {
     const [password, setPassword] = useState("");
     const [result, setResult] = useState<null | PasswordStrengthResult>(null);
-
     const [loading, setLoading] = useState(false);
 
     const checkStrength = async () => {
@@ -30,22 +30,38 @@ export default function PasswordChecker() {
                 `https://securepassvault-1.onrender.com/utils/password-strength?password=${encodeURIComponent(password)}`,
                 {
                     method: "POST",
-                    headers: { "Accept": "application/json" },
+                    headers: { Accept: "application/json" },
                 }
             );
-              
 
-            const data = await response.json();
-            console.log("✅ API Response:", data);
+            const data: PasswordStrengthResult = await response.json();
+            console.log("Password Strength Response:", data);
             setResult(data);
         } catch (err) {
-            console.error("❌ Failed to fetch password strength", err);
+            console.error("Failed to fetch password strength", err);
         } finally {
             setLoading(false);
         }
     };
 
-    const getVerdictColor = (verdict: string) => {
+    const getBarColor = (verdict: string) => {
+        switch (verdict) {
+            case "Very Strong":
+                return "bg-green-500";
+            case "Strong":
+                return "bg-green-400";
+            case "Moderate":
+                return "bg-yellow-400";
+            case "Weak":
+                return "bg-orange-400";
+            case "Very Weak":
+                return "bg-red-500";
+            default:
+                return "bg-gray-400";
+        }
+    };
+
+    const getTextColor = (verdict: string) => {
         switch (verdict) {
             case "Very Strong":
                 return "text-green-400";
@@ -59,6 +75,23 @@ export default function PasswordChecker() {
                 return "text-red-400";
             default:
                 return "text-gray-300";
+        }
+    };
+
+    const getVerdictScore = (verdict: string): number => {
+        switch (verdict) {
+            case "Very Weak":
+                return 20;
+            case "Weak":
+                return 40;
+            case "Moderate":
+                return 60;
+            case "Strong":
+                return 80;
+            case "Very Strong":
+                return 100;
+            default:
+                return 0;
         }
     };
 
@@ -82,31 +115,56 @@ export default function PasswordChecker() {
                 {loading ? "Checking..." : "Check Strength"}
             </button>
 
-            {result?.verdict && (
-                <div className="mt-2 space-y-2">
-                    <p>
-                        <strong>Verdict:</strong>{" "}
-                        <span className={`font-bold ${getVerdictColor(result.verdict)}`}>
-                            {result.verdict}
-                        </span>
-                    </p>
+            <AnimatePresence>
+                {result?.verdict && (
+                    <motion.div
+                        key="result"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        transition={{ duration: 0.3 }}
+                        className="mt-2 space-y-3 bg-gray-800/40 p-4 rounded-lg overflow-hidden"
+                    >
+                        {/* Safety Meter */}
+                        <div className="w-full h-3 rounded bg-gray-700 overflow-hidden">
+                            <motion.div
+                                className={`h-full ${getBarColor(result.verdict)}`}
+                                initial={{ width: 0 }}
+                                animate={{ width: `${getVerdictScore(result.verdict)}%` }}
+                                transition={{ duration: 0.5 }}
+                            />
+                        </div>
 
-                    {result.estimted_crack_times && (
-                        <div>
-                            <strong>Crack Times:</strong>
-                            <ul className="list-disc list-inside text-gray-300">
-                                {Object.entries(result.estimted_crack_times).map(
-                                    ([method, time]) => (
+                        {/* Verdict Text */}
+                        <p className="text-base">
+                            <strong>Verdict:</strong>{" "}
+                            <motion.span
+                                className={`font-bold ${getTextColor(result.verdict)}`}
+                                key={result.verdict}
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                transition={{ duration: 0.4 }}
+                            >
+                                {result.verdict}
+                            </motion.span>
+                        </p>
+
+                        {/* Crack Times */}
+                        {result.estimted_crack_times && (
+                            <div>
+                                <strong>Crack Times:</strong>
+                                <ul className="list-disc list-inside text-gray-300 break-words overflow-x-auto">
+                                    {Object.entries(result.estimted_crack_times).map(([method, time]) => (
                                         <li key={method}>
                                             {method}: <span className="text-white">{String(time)}</span>
                                         </li>
-                                    )
-                                )}
-                            </ul>
-                        </div>
-                    )}
-                </div>
-            )}
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }
