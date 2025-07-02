@@ -106,6 +106,9 @@ export default function VaultPage() {
                             </svg>
                             <span>Add Entry</span>
                         </button>
+                        <br />
+                        <br />
+                        <img src="/saved.gif" alt="Vault" className="w-69 h-110" />
                     </div>
                 </nav>
 

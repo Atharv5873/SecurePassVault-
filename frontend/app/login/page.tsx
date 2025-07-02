@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
-import { deriveKeyFromPassword } from '@/lib/crypto/deriveKey';
+import { deriveKey } from '@/lib/crypto/deriveKey';
 import { useCrypto } from '@/contexts/cryptocontext';
 
 export default function LoginPage() {
@@ -70,14 +70,11 @@ export default function LoginPage() {
 
             const salt = Uint8Array.from(atob(saltData.salt), c => c.charCodeAt(0));
             if (!window.crypto?.subtle) {
-
-                console.log("window.crypto:", window.crypto);
-                console.log("window.crypto.subtle:", window.crypto?.subtle);
                 toast.error("Your browser doesn't support secure encryption. Please use Chrome or Firefox.");
                 return;
             }
 
-            const key = await deriveKeyFromPassword(password, salt);
+            const key = await deriveKey(password, salt);
             
             setDerivedKey(key);
 
@@ -88,7 +85,6 @@ export default function LoginPage() {
 
             sessionStorage.setItem('token', data.access_token); // Save it
             router.push('/vault');
-            console.log('[Login Response]', data); // check if token exists
 
             
         } catch (err) {

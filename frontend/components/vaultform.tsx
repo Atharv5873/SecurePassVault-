@@ -34,7 +34,7 @@ export default function VaultForm({ userToken, onNewEntry }: VaultFormProps) {
             const encryptedPassword = await encryptData(derivedKey, password);
             toast.dismiss();
 
-            const res = await fetch('https://securepassvault-1.onrender.com/credentials/', {
+            const res = await fetch('/credentials/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -64,11 +64,11 @@ export default function VaultForm({ userToken, onNewEntry }: VaultFormProps) {
     return (
         <div className="w-full">
             <div className="mb-8 text-center">
-                <h2 className="text-2xl font-bold neon-text mb-2">Add New Entry</h2>
+                <h1 className="text-2xl font-bold neon-text mb-2">Add New Entry</h1>
                 <p className="text-gray-400 text-sm">Create a new secure password entry</p>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-6 ">
                 {/* Website Field */}
                 <div className="space-y-2">
                     <label className="block text-sm font-medium text-gray-300 flex items-center gap-2">

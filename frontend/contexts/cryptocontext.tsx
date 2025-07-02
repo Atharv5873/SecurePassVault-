@@ -1,6 +1,6 @@
 'use client';
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { deriveKeyFromPassword } from '@/lib/crypto/deriveKey';
+import { deriveKey } from '@/lib/crypto/deriveKey';
 
 interface CryptoCtx {
     derivedKey: CryptoKey | null;
@@ -31,7 +31,7 @@ export function CryptoProvider({ children }: { children: React.ReactNode }) {
                 try {
                     // Convert base64 salt string to Uint8Array
                     const saltBytes = Uint8Array.from(atob(salt), c => c.charCodeAt(0));
-                    const key = await deriveKeyFromPassword(password, saltBytes);
+                    const key = await deriveKey(password, saltBytes);
                     setDerivedKey(key);
                 } catch (err) {
                     console.error('Auto-restore failed:', err);

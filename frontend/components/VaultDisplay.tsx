@@ -36,28 +36,22 @@ export default function VaultDisplay({ userToken, entries, setEntries, onEntries
     }, [setEntries, onEntriesLoaded]);
 
     useEffect(() => {
-        console.log('VaultDisplay useEffect triggered', { userToken: !!userToken, hasLoaded });
 
         if (userToken && !hasLoaded && !hasInitializedRef.current) {
-            console.log('Calling fetchEntries...');
             hasInitializedRef.current = true;
 
             const fetchEntries = async () => {
                 try {
-                    console.log('Fetching entries...');
                     setIsLoading(true);
 
-                    const res = await fetch(`https://securepassvault-1.onrender.com/credentials`, {
+                    const res = await fetch(`/credentials`, {
                         headers: {
                             Authorization: `Bearer ${userToken}`,
                         },
                     });
 
-                    console.log('Response status:', res.status);
-                    console.log('Response headers:', res.headers);
 
-                    const data = await res.json(); // Will fail if it's not JSON
-                    console.log('Fetched data:', data);
+                    const data = await res.json();
 
                     if (!res.ok) {
                         console.error('API Error:', res.status, data);
@@ -70,7 +64,6 @@ export default function VaultDisplay({ userToken, entries, setEntries, onEntries
                     }
 
                     setEntriesRef.current(data);
-                    console.log('Entries set:', data);
                     setHasLoaded(true);
                     if (onEntriesLoadedRef.current) {
                         onEntriesLoadedRef.current(data);
@@ -100,7 +93,7 @@ export default function VaultDisplay({ userToken, entries, setEntries, onEntries
     if (hasLoaded && entries.length === 0) {
         return (
             <div className="text-center py-16">
-                <div className="w-24 h-24 mx-auto mb-6 bg-[#181c1b] rounded-full flex items-center justify-center border border-[color:var(--neon)]/30">
+                <div className="w-24 h-24 mx-auto mb-6 bg-[#181c1b] rounded-full flex items-center justify-center shadow-lg">
                     <svg className="w-12 h-12 text-[color:var(--neon)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                     </svg>
@@ -118,7 +111,7 @@ export default function VaultDisplay({ userToken, entries, setEntries, onEntries
                 return;
             }
 
-            const res = await fetch(`https://securepassvault-1.onrender.com/credentials/reveal/${id}`, {
+            const res = await fetch(`/credentials/reveal/${id}`, {
                 headers: {
                     Authorization: `Bearer ${userToken}`,
                 },
@@ -159,7 +152,7 @@ export default function VaultDisplay({ userToken, entries, setEntries, onEntries
         if (!window.confirm('Are you sure you want to delete this password?')) return;
 
         try {
-            const res = await fetch(`https://securepassvault-1.onrender.com/credentials/delete/${id}`, {
+            const res = await fetch(`/credentials/delete/${id}`, {
                 method: 'DELETE',
                 headers: {
                     Authorization: `Bearer ${userToken}`,
@@ -193,7 +186,7 @@ export default function VaultDisplay({ userToken, entries, setEntries, onEntries
                     const expanded = expandedId === entry.id;
                     const passwordVisible = visiblePasswords.has(entry.id);
                     return (
-                        <li key={entry.id} className={`rounded-xl bg-white/5 border border-[color:var(--neon)]/30 shadow-lg transition-all duration-300 ${expanded ? 'ring-2 ring-[color:var(--neon)]/60' : ''}`}>
+                        <li key={entry.id} className={`rounded-xl bg-white/5 shadow-lg transition-all duration-300 ${expanded ? 'ring-2 ring-transparent' : ''}`}>
                             <button
                                 className="w-full flex items-center justify-between px-6 py-4 focus:outline-none group"
                                 onClick={() => handleExpand(entry.id)}

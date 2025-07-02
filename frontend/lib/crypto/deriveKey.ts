@@ -1,4 +1,4 @@
-export async function deriveKeyFromPassword(password: string, salt: Uint8Array): Promise<CryptoKey> {
+export async function deriveKey(password: string, salt: Uint8Array): Promise<CryptoKey> {
     // 1. Encode password to ArrayBuffer
     const enc = new TextEncoder();
     const passKey = enc.encode(password);

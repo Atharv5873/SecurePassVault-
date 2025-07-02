@@ -1,6 +1,6 @@
 import toast from 'react-hot-toast';
 import { generateSalt, encodeSalt, decodeSalt } from '@/lib/crypto/salt';
-import { deriveKeyFromPassword } from '@/lib/crypto/deriveKey';
+import { deriveKey } from '@/lib/crypto/deriveKey';
 import { Dispatch, SetStateAction } from 'react';
 
 export async function register(email: string, password: string) {
@@ -52,7 +52,7 @@ export async function login(
         const salt = decodeSalt(encodedSalt);
 
         // 2. Derive key using user's password + salt
-        const key = await deriveKeyFromPassword(password, salt);
+        const key = await deriveKey(password, salt);
 
         // 3. Authenticate with backend
         const res = await fetch('/auth/login', {
