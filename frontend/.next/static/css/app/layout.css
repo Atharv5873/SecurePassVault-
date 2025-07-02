@@ -266,9 +266,6 @@
   .z-20 {
     z-index: 20;
   }
-  .z-30 {
-    z-index: 30;
-  }
   .z-50 {
     z-index: 50;
   }
@@ -1427,11 +1424,6 @@
   .lg\:ml-80 {
     @media (width >= 64rem) {
       margin-left: calc(var(--spacing) * 80);
-    }
-  }
-  .lg\:ml-110 {
-    @media (width >= 64rem) {
-      margin-left: calc(var(--spacing) * 110);
     }
   }
   .lg\:h-12 {

@@ -153,7 +153,7 @@ export default function Home() {
   return (
     <div className="min-h-screen w-full flex flex-col lg:flex-row">
       {/* Left Panel */}
-      <section className="w-full lg:w-110 lg:fixed lg:top-0 lg:left-0 bg-[#0d0f0f] flex flex-col justify-between p-4 sm:p-6 lg:p-12 z-30">
+      <section className="w-full lg:w-110 bg-[#0d0f0f] flex flex-col justify-between p-4 sm:p-6 lg:p-12">
         <div>
           <div className="flex justify-between text-[10px] sm:text-xs text-gray-400 mb-6 sm:mb-8">
             <span>© 2025 • Cyber Cordon</span>
@@ -200,7 +200,7 @@ export default function Home() {
       </section>
 
       {/* Right Panel */}
-      <section className="lg:ml-110 min-h-screen overflow-y-auto bg-[#1a1b1f] flex-1 flex flex-col items-center justify-start relative min-h-screen overflow-y-auto p-4 sm:p-6">
+      <section className="w-full bg-[#1a1b1f] flex flex-col items-center justify-start relative p-4 sm:p-6">
         <div className="relative z-10 flex flex-col items-center pt-0 mt-10">
           <Image
             src="/applogo.png.png"
