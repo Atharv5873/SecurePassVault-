@@ -153,7 +153,7 @@ export default function Home() {
   return (
     <div className="min-h-screen w-full flex flex-col lg:flex-row">
       {/* Left Panel */}
-      <section className="w-full lg:w-110 lg:max-h-fit lg:fixed lg:top-0 lg:left-0 bg-[#0d0f0f] flex flex-col justify-between p-4 sm:p-6 lg:p-12 z-30 overflow-y-auto">
+      <section className="w-full lg:w-110 lg:fixed lg:top-0 lg:left-0 bg-[#0d0f0f] flex flex-col justify-between p-4 sm:p-6 lg:p-12 z-30">
         <div>
           <div className="flex justify-between text-[10px] sm:text-xs text-gray-400 mb-6 sm:mb-8">
             <span>© 2025 • Cyber Cordon</span>
