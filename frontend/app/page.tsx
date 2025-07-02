@@ -153,13 +153,13 @@ export default function Home() {
   return (
     <div className="min-h-screen w-full flex flex-col lg:flex-row">
       {/* Left Panel */}
-      <section className="w-full lg:w-110 lg:fixed lg:top-0 lg:left-0 lg:bottom-0 bg-[#0d0f0f] text-center flex flex-col justify-between p-4 sm:p-6 lg:p-12 z-30">
+      <section className="w-full lg:w-110 lg:fixed lg:top-0 lg:left-0 lg:bottom-0 bg-[#0d0f0f] flex flex-col justify-between p-4 sm:p-6 lg:p-12 z-30">
         <div>
           <div className="flex justify-between text-[10px] sm:text-xs text-gray-400 mb-6 sm:mb-8">
             <span>© 2025 • Cyber Cordon</span>
             <span>ver 2.3.0</span>
           </div>
-          <div className="text-xl sm:text-2xl lg:text-4xl font-semibold mb-3 sm:mb-4" style={{ letterSpacing: '0.01em' }}>
+          <div className="text-xl sm:text-2xl lg:text-4xl font-semibold mb-3 text-center sm:mb-4" style={{ letterSpacing: '0.01em' }}>
             Vault so secure even Gru can&apos;t break in
           </div>
           <div className="accent-line" />
@@ -180,13 +180,13 @@ export default function Home() {
                 href="https://cybercordon.vercel.app"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center justify-center px-6 py-3 text-base font-semibold text-black bg-[#e0ffe0] border border-[#e0ffe0] rounded-lg hover:bg-teal-900 hover:text-[#e0ffe0] hover:border-teal-900 transition-all duration-200 w-full sm:w-48"
+                className="inline-flex items-center justify-center px-6 py-3 text-base font-semibold text-black bg-[#e0ffe0] border border-[#e0ffe0] rounded-lg hover:bg-[color:var(--neon)] hover:text-[#e0ffe0] hover:border-[color:var(--neon)] transition-all duration-200 w-full sm:w-48"
               >
                 VAPT Services
               </a>
               <Link
                 href="/aboutus"
-                className="inline-flex items-center justify-center px-6 py-3 text-base font-semibold text-black bg-[#e0ffe0] border border-[#e0ffe0] rounded-lg hover:bg-teal-900 hover:text-[#e0ffe0] hover:border-teal-900 transition-all duration-200 w-full sm:w-48"
+                className="inline-flex items-center justify-center px-6 py-3 text-base font-semibold text-black bg-[#e0ffe0] border border-[#e0ffe0] rounded-lg hover:bg-[color:var(--neon)] hover:text-[#e0ffe0] hover:border-[color:var(--neon)] transition-all duration-200 w-full sm:w-48"
               >
                 About Us
               </Link>
@@ -219,7 +219,7 @@ export default function Home() {
                 e.preventDefault();
                 setShowRegisterModal(true);
               }}
-              className="w-full sm:w-32 px-6 py-3 rounded-md font-semibold border border-yellow-500 bg-yellow-500 hover:bg-gray-600 hover:border-gray-600 text-center"
+              className="w-full sm:w-32 px-6 py-3 rounded-md font-semibold border border-yellow-500 bg-yellow-500 hover:bg-[color:var(--neon)] hover:border-[color:var(--neon)] text-center"
             >
               Register
             </button>
@@ -228,7 +228,7 @@ export default function Home() {
                 e.preventDefault();
                 setShowLoginModal(true);
               }}
-              className="w-full sm:w-32 px-6 py-3 rounded-md font-semibold text-white border border-gray-600 bg-gray-600 hover:bg-teal-900 hover:border-teal-900 transition-all duration-200 text-center"
+              className="w-full sm:w-32 px-6 py-3 rounded-md font-semibold text-white border border-gray-600 bg-gray-600 hover:bg-[color:var(--neon)] hover:border-[color:var(--neon)] transition-all duration-200 text-center"
             >
               Login
             </button>

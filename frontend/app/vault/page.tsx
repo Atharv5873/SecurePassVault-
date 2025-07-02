@@ -7,6 +7,7 @@ import LogoutButton from '@/components/logoutbutton';
 import type { VaultEntry } from '../types/vault';
 import Image from 'next/image';
 import { useCrypto } from '@/contexts/cryptocontext';
+import PasswordChecker from '@/components/passwordchecker';
 
 export default function VaultPage() {
     const [token, setToken] = useState<string | null>(null);
@@ -95,7 +96,7 @@ export default function VaultPage() {
                             </button>
                             <br />
                             <br />
-                            <img src="/saved.gif" alt="Vault" className="w-fill h-100 mt-4" />
+                            <PasswordChecker />
                         </div>
                     </nav>
                 </div>
