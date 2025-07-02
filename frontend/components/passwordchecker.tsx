@@ -2,9 +2,23 @@
 
 import { useState } from "react";
 
+interface CrackTimes {
+    [method: string]: string;
+}
+
+interface PasswordStrengthResult {
+    password: string;
+    length: number;
+    charset_size: number;
+    entropy_bits: number;
+    estimted_crack_times: CrackTimes;
+    verdict: string;
+}
+  
 export default function PasswordChecker() {
     const [password, setPassword] = useState("");
-    const [result, setResult] = useState<null | any>(null);
+    const [result, setResult] = useState<null | PasswordStrengthResult>(null);
+
     const [loading, setLoading] = useState(false);
 
     const checkStrength = async () => {
