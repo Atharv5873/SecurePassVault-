@@ -1,6 +1,8 @@
 from fastapi import FastAPI
 from Routers import credentials_router,auth_router,admin_router
 from fastapi.middleware.cors import CORSMiddleware
+from apscheduler.schedulers.background import BackgroundScheduler
+import httpx
 
 app = FastAPI(title="SecurePassVault API")
 
@@ -15,3 +17,19 @@ app.add_middleware(
 app.include_router(auth_router.router)
 app.include_router(credentials_router.router)
 app.include_router(admin_router.router)
+
+def ping_site():
+    try:
+        url="https://securepassvault-bdtd.onrender.com/"
+        response=httpx.get(url,timeout=10)
+        print(f"Pinged {url} | Status : {response.status_code}")
+    except Exception as e:
+        print(f"Ping error: {e}")
+        
+scheduler=BackgroundScheduler()
+scheduler.add_job(ping_site,'interval',minutes=13)
+scheduler.start()
+
+@app.get("/")
+def root():
+    return {"message":"SecurePass Vault is Running"}
