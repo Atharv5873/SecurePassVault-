@@ -18,7 +18,7 @@ export const metadata: Metadata = {
         title: "SecurePass Vault | Cyber Cordon",
         description:
             "Expert VAPT services for startups, businesses, and developers. Identify and fix vulnerabilities fast.",
-        url: "https://securepassvault-bdtd.onrender.com/",
+        url: "https://securepass-vault.onrender.com/",
         siteName: "SecurePass Vault",
         images: [
             {
@@ -70,8 +70,8 @@ export default function RootLayout({
         "@context": "https://schema.org",
         "@type": "Product",
         name: "SecurePass Vault",
-        url: "https://securepassvault-bdtd.onrender.com/",
-        logo: "https://securepassvault-bdtd.onrender.com/logo.png",
+        url: "https://securepass-vault.onrender.com/",
+        logo: "https://securepass-vault.onrender.com/logo.png",
     };
 
     return (
