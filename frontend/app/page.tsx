@@ -144,11 +144,11 @@ export default function Home() {
   return (
     <div className="min-h-screen w-full flex flex-col lg:flex-row">
       {/* Left Panel */}
-      <section className="split-left flex flex-col justify-between p-4 sm:p-6 lg:p-12 w-full lg:max-w-[480px] min-h-screen text-center">
+      <section className="fixed left-0 top-0 bottom-0 w-full lg:w-[480px] bg-[#0d0f0f] text-center flex flex-col justify-between p-4 sm:p-6 lg:p-12 z-30">
         <div>
           <div className="flex justify-between text-[10px] sm:text-xs text-gray-400 mb-6 sm:mb-8">
             <span>© 2025 • Cyber Cordon</span>
-            <span>ver 2.0.1</span>
+            <span>ver 2.3.0</span>
           </div>
           <div className="text-xl sm:text-2xl lg:text-4xl font-semibold mb-3 sm:mb-4" style={{ letterSpacing: '0.01em' }}>
             Vault so secure even Gru can&apos;t break in
@@ -189,7 +189,7 @@ export default function Home() {
       </section>
 
       {/* Right Panel */}
-      <section className="split-right flex-1 flex flex-col items-center justify-start relative min-h-screen overflow-hidden p-4 sm:p-6 lg:p-0">
+      <section className="ml-0 lg:ml-[480px] w-full bg-[#1a1b1f] flex-1 flex flex-col items-center justify-start relative min-h-screen overflow-y-auto p-4 sm:p-6">
         <div className="relative z-10 flex flex-col items-center pt-0 mt-10">
           <Image
             src="/applogo.png.png"
@@ -267,10 +267,85 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Modals are unchanged */}
       {(showLoginModal || showRegisterModal) && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
-          {/* login/register modals... */}
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          {showLoginModal && (
+            <div className="bg-[#181c1b] p-8 w-full max-w-md rounded-lg shadow-xl relative z-50">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold neon-text">Login</h2>
+                <button onClick={() => setShowLoginModal(false)} className="text-gray-400 hover:text-white text-2xl">&times;</button>
+              </div>
+              <form onSubmit={handleLogin} className="flex flex-col space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Email</label>
+                  <input
+                    type="email"
+                    value={loginEmail}
+                    onChange={(e) => setLoginEmail(e.target.value)}
+                    required
+                    className="w-full px-4 py-2 bg-gray-800 border border-gray-600 rounded-md text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Password</label>
+                  <input
+                    type="password"
+                    value={loginPassword}
+                    onChange={(e) => setLoginPassword(e.target.value)}
+                    required
+                    className="w-full px-4 py-2 bg-gray-800 border border-gray-600 rounded-md text-white"
+                  />
+                </div>
+                <button type="submit" className="px-6 py-3 bg-[color:var(--neon)] text-black font-semibold rounded-md hover:bg-blue-400 transition-all duration-200">
+                  Login
+                </button>
+              </form>
+            </div>
+          )}
+
+          {showRegisterModal && (
+            <div className="bg-[#181c1b] p-8 w-full max-w-md rounded-lg shadow-xl relative z-50">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold neon-text">Register</h2>
+                <button onClick={() => setShowRegisterModal(false)} className="text-gray-400 hover:text-white text-2xl">&times;</button>
+              </div>
+              <form onSubmit={handleRegister} className="flex flex-col space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Email</label>
+                  <input
+                    type="email"
+                    value={registerEmail}
+                    onChange={(e) => setRegisterEmail(e.target.value)}
+                    required
+                    className="w-full px-4 py-2 bg-gray-800 border border-gray-600 rounded-md text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Password</label>
+                  <input
+                    type="password"
+                    value={registerPassword}
+                    onChange={(e) => setRegisterPassword(e.target.value)}
+                    required
+                    className="w-full px-4 py-2 bg-gray-800 border border-gray-600 rounded-md text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Confirm Password</label>
+                  <input
+                    type="password"
+                    value={registerConfirmPassword}
+                    onChange={(e) => setRegisterConfirmPassword(e.target.value)}
+                    required
+                    className="w-full px-4 py-2 bg-gray-800 border border-gray-600 rounded-md text-white"
+                  />
+                </div>
+                <button type="submit" className="px-6 py-3 bg-[color:var(--neon)] text-black font-semibold rounded-md hover:bg-blue-400 transition-all duration-200">
+                  Register
+                </button>
+              </form>
+            </div>
+          )}
         </div>
       )}
     </div>

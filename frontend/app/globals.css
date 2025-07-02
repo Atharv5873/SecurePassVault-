@@ -52,13 +52,13 @@ html {
   color: #e0ffe0;
   /* Your text color */
   text-shadow:
-    0 0 5px #e0ffe0,
+    0 0 1px #e0ffe0,
     /* Light glow */
-    0 0 10px #e0ffe0,
+    0 0 2ch #e0ffe0,
     /* Medium glow */
-    0 0 15px #00a6ff,
+    0 0 3px #00a6ff,
     /* Stronger glow */
-    0 0 20px #e5ff00;
+    0 0 4px #e5ff00;
   /* Brightest glow */
 }
 .loading-progress::-webkit-progress-value {
