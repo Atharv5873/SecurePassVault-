@@ -46,6 +46,7 @@ export default function AdminPage() {
             }
 
         } catch (err) {
+            console.error('Error checking admin access:', err);
             router.push('/');
         }
     }, [router]);

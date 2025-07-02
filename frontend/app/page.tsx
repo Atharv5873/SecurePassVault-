@@ -150,7 +150,7 @@ export default function Home() {
             <span>© 2025 • A product by Cyber Cordon</span>
             <span>ver 2.0.1</span>
           </div>
-          <div className="text-2xl sm:text-3xl font-semibold lg:text-4xl mb-4" style={{ letterSpacing: '0.01em' }}>Vault so seure that even Gru can't break in</div>
+          <div className="text-2xl sm:text-3xl font-semibold lg:text-4xl mb-4" style={{ letterSpacing: '0.01em' }}>Vault so seure that even Gru can&apost break in</div>
           <div className="accent-line" />
           <div className="mb-6 lg:mb-8">
             <Image
