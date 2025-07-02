@@ -58,7 +58,7 @@ html {
     /* Medium glow */
     0 0 3px #00a6ff,
     /* Stronger glow */
-    0 0 4px #e5ff00;
+    /* 0 0 4px #e5ff00; */
   /* Brightest glow */
 }
 .loading-progress::-webkit-progress-value {

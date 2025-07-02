@@ -236,20 +236,22 @@ export default function Home() {
 
           <section className="py-10 sm:py-20 px-4 sm:px-6 bg-[#1a1b1f] w-full">
             <div className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 text-center">
-              <div className="p-4 sm:p-6 backdrop-blur-md bg-white/5 rounded-xl shadow">
+              <div className="p-4 sm:p-6 backdrop-blur-md bg-transparent rounded-xl shadow">
                 <h3 className="text-lg sm:text-xl font-semibold glow mb-2">Zero-Knowledge Architecture</h3>
                 <p className="text-slate-300 text-sm">
                   Your data is encrypted before it even leaves your device. Not even we can see your passwords.
                 </p>
               </div>
-              <div className="p-4 sm:p-6 backdrop-blur-md bg-white/5 rounded-xl shadow">
+              <div className="p-4 sm:p-6 backdrop-blur-md bg-transparent rounded-xl shadow">
                 <h3 className="text-lg sm:text-xl font-semibold glow mb-2">Two-Layer Encryption</h3>
+                <br />
                 <p className="text-slate-300 text-sm">
                   AES encryption on the frontend and backend ensures your credentials are secure — twice.
                 </p>
               </div>
-              <div className="p-4 sm:p-6 backdrop-blur-md bg-white/5 rounded-xl shadow">
+              <div className="p-4 sm:p-6 backdrop-blur-md bg-transparent rounded-xl shadow">
                 <h3 className="text-lg sm:text-xl font-semibold glow mb-2">Trustless by Design</h3>
+                <br />
                 <p className="text-slate-300 text-sm">
                   Designed with security-first principles — we can&apos;t read, retrieve, or misuse your data.
                 </p>
@@ -354,6 +356,16 @@ export default function Home() {
                 <button type="submit" className="px-6 py-3 bg-[color:var(--neon)] text-black font-semibold rounded-md hover:bg-blue-400 transition-all duration-200">
                   Register
                 </button>
+                <div className="mt-6 p-4 rounded-xl bg-[color:var(--neon)]/10 border border-[color:var(--neon)]/20">
+                  <div className="flex items-start gap-3">
+                    <div className="w-2 h-2 bg-[color:var(--neon)] rounded-full mt-2 flex-shrink-0"></div>
+                    <div>
+                      <p className="text-sm text-gray-300">
+                        <span className="font-medium text-[color:var(--neon)]">Important Note:</span> Your password is used for generating your encryptyion key. Make sure you always remember it. We cannot help in retrieving your passwords in case you forget your vault&apos;s password.
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </form>
             </div>
           )}
