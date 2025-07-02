@@ -21,6 +21,15 @@ export default function Home() {
   const [registerConfirmPassword, setRegisterConfirmPassword] = useState('');
   const router = useRouter();
   const { setDerivedKey } = useCrypto();
+  const [showMobilePopup, setShowMobilePopup] = useState(false);
+
+  useEffect(() => {
+    const dismissed = sessionStorage.getItem('dismissMobilePopup');
+    if (!dismissed && typeof window !== 'undefined' && window.innerWidth < 768) {
+      setShowMobilePopup(true);
+    }
+  }, []);
+
 
   useEffect(() => {
     fetch(`/admin/user-count`)
@@ -144,7 +153,7 @@ export default function Home() {
   return (
     <div className="min-h-screen w-full flex flex-col lg:flex-row">
       {/* Left Panel */}
-      <section className="w-full lg:w-80 lg:fixed lg:top-0 lg:left-0 lg:bottom-0 bg-[#0d0f0f] text-center flex flex-col justify-between p-4 sm:p-6 lg:p-12 z-30">
+      <section className="w-full lg:w-110 lg:fixed lg:top-0 lg:left-0 lg:bottom-0 bg-[#0d0f0f] text-center flex flex-col justify-between p-4 sm:p-6 lg:p-12 z-30">
         <div>
           <div className="flex justify-between text-[10px] sm:text-xs text-gray-400 mb-6 sm:mb-8">
             <span>© 2025 • Cyber Cordon</span>
@@ -166,20 +175,22 @@ export default function Home() {
           </div>
           {/* About Us Button */}
           <div className="mb-4 sm:mb-6 lg:mb-8 flex flex-col sm:flex-row items-center justify-center gap-3">
-            <a
-              href="https://cybercordon.vercel.app"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-3 py-1.5 rounded-md font-semibold text-black border border-[#e0ffe0] bg-[#e0ffe0] hover:bg-teal-900 hover:border-teal-900 hover:text-[#e0ffe0] transition-all duration-200 text-center w-full sm:w-auto max-w-[150px]"
-            >
-              VAPT Services
-            </a>
-            <Link
-              href="/aboutus"
-              className="px-3 py-1.5 rounded-md font-semibold text-black border border-[#e0ffe0] bg-[#e0ffe0] hover:bg-teal-900 hover:border-teal-900 hover:text-[#e0ffe0] transition-all duration-200 text-center w-full sm:w-auto max-w-[150px]"
-            >
-              About Us
-            </Link>
+            <div className="mb-4 sm:mb-6 lg:mb-8 flex flex-col sm:flex-row items-center justify-center gap-4">
+              <a
+                href="https://cybercordon.vercel.app"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center px-6 py-3 text-base font-semibold text-black bg-[#e0ffe0] border border-[#e0ffe0] rounded-lg hover:bg-teal-900 hover:text-[#e0ffe0] hover:border-teal-900 transition-all duration-200 w-full sm:w-48"
+              >
+                VAPT Services
+              </a>
+              <Link
+                href="/aboutus"
+                className="inline-flex items-center justify-center px-6 py-3 text-base font-semibold text-black bg-[#e0ffe0] border border-[#e0ffe0] rounded-lg hover:bg-teal-900 hover:text-[#e0ffe0] hover:border-teal-900 transition-all duration-200 w-full sm:w-48"
+              >
+                About Us
+              </Link>
+            </div>
           </div>
         </div>
         <div className="mb-4">
@@ -189,7 +200,7 @@ export default function Home() {
       </section>
 
       {/* Right Panel */}
-      <section className="lg:ml-80 min-h-screen overflow-y-auto bg-[#1a1b1f] flex-1 flex flex-col items-center justify-start relative min-h-screen overflow-y-auto p-4 sm:p-6">
+      <section className="lg:ml-110 min-h-screen overflow-y-auto bg-[#1a1b1f] flex-1 flex flex-col items-center justify-start relative min-h-screen overflow-y-auto p-4 sm:p-6">
         <div className="relative z-10 flex flex-col items-center pt-0 mt-10">
           <Image
             src="/applogo.png.png"
@@ -348,6 +359,26 @@ export default function Home() {
           )}
         </div>
       )}
+      {showMobilePopup && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md">
+          <div className="bg-[#1e1e1e] border border-[color:var(--neon)] p-6 rounded-xl shadow-lg max-w-sm text-center space-y-4">
+            <h2 className="text-xl font-bold neon-text">Heads Up!</h2>
+            <p className="text-gray-300 text-sm">
+              This site is optimized for desktop. For the best experience, please switch to a larger screen.
+            </p>
+            <button
+              onClick={() => {
+                sessionStorage.setItem('dismissMobilePopup', 'true');
+                setShowMobilePopup(false);
+              }}
+              className="mt-2 px-4 py-2 bg-[color:var(--neon)] text-black rounded-lg font-semibold hover:bg-opacity-90 transition"
+            >
+              Continue Anyway
+            </button>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
