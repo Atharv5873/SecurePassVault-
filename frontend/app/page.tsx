@@ -1,13 +1,14 @@
 'use client';
 
-import Link from 'next/link';
-import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { useCrypto } from '@/contexts/cryptocontext';
-import { deriveKeyFromPassword } from '@/lib/crypto/deriveKey';
+import { deriveKey } from '@/lib/crypto/deriveKey';
 import { generateSalt, encodeSalt } from '@/lib/crypto/salt';
+import { encryptText } from '@/lib/crypto/encrypt';
+import Image from 'next/image';
+import Link from "next/link";
 
 export default function Home() {
   const [userCount, setUserCount] = useState<number | null>(null);
@@ -22,7 +23,7 @@ export default function Home() {
   const { setDerivedKey } = useCrypto();
 
   useEffect(() => {
-    fetch("https://securepassvault-1.onrender.com/admin/user-count")
+    fetch(`/admin/user-count`)
       .then((res) => res.json())
       .then((data) => setUserCount(data.total_users))
       .catch(() => setUserCount(null));
@@ -57,11 +58,8 @@ export default function Home() {
       toast.success('Login successful!');
       toast.loading('Fetching salt...');
 
-      // Fetch the salt
       const saltRes = await fetch(`/auth/salt?username=${encodeURIComponent(loginEmail)}`, {
-        headers: {
-          Authorization: `Bearer ${data.access_token}`,
-        },
+        headers: { Authorization: `Bearer ${data.access_token}` },
       });
       const saltData = await saltRes.json();
       toast.dismiss();
@@ -71,39 +69,27 @@ export default function Home() {
         return;
       }
 
-      // Store necessary data in sessionStorage
+      const salt = Uint8Array.from(atob(saltData.salt), c => c.charCodeAt(0));
+      const key = await deriveKey(loginPassword, salt);
+      const sessionKey = crypto.randomUUID();
+
       sessionStorage.setItem('token', data.access_token);
       sessionStorage.setItem('salt', saltData.salt);
-      sessionStorage.setItem('vault-password', loginPassword);
+      sessionStorage.setItem('vault-password', encryptText(loginPassword, sessionKey));
       sessionStorage.setItem('user-email', loginEmail);
 
-      // Derive the encryption key
-      const salt = Uint8Array.from(atob(saltData.salt), c => c.charCodeAt(0));
-      const key = await deriveKeyFromPassword(loginPassword, salt);
       setDerivedKey(key);
 
-      // Check if user is admin
       const meRes = await fetch('/auth/me', {
-        headers: {
-          Authorization: `Bearer ${data.access_token}`,
-        },
+        headers: { Authorization: `Bearer ${data.access_token}` },
       });
-      console.log('Login - Auth me response status:', meRes.status);
 
+      setShowLoginModal(false);
       if (meRes.ok) {
         const meData = await meRes.json();
-        console.log('Login - User data from /auth/me:', meData);
-        setShowLoginModal(false);
-        if (meData.is_admin) {
-          console.log('Login - User is admin, redirecting to /admin');
-          router.push('/admin');
-        } else {
-          console.log('Login - User is not admin, redirecting to /vault');
-          router.push('/vault');
-        }
+        if (meData.is_admin) router.push('/admin');
+        else router.push('/vault');
       } else {
-        console.log('Login - Auth me failed, redirecting to /vault');
-        setShowLoginModal(false);
         router.push('/vault');
       }
     } catch (err) {
@@ -123,7 +109,6 @@ export default function Home() {
       toast.dismiss();
       toast.loading('Creating account...');
 
-      // Generate salt for the user
       const salt = generateSalt();
       const encodedSalt = encodeSalt(salt);
 
@@ -159,13 +144,13 @@ export default function Home() {
   return (
     <div className="min-h-screen w-full flex flex-col lg:flex-row">
       {/* Left Panel */}
-      <section className="split-left flex flex-col justify-between p-6 lg:p-12 w-full lg:max-w-[480px] min-h-screen lg:min-h-screen">
+      <section className="split-left flex flex-col justify-between p-6 lg:p-12 w-full lg:max-w-[480px] min-h-screen lg:min-h-screen text-center">
         <div>
           <div className="flex justify-between text-xs text-gray-400 mb-8">
             <span>© 2025 • A product by Cyber Cordon</span>
             <span>ver 2.0.1</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4" style={{ letterSpacing: '0.01em' }}>SecurePass Vault</h1>
+          <div className="text-2xl sm:text-3xl font-semibold lg:text-4xl mb-4" style={{ letterSpacing: '0.01em' }}>Vault so seure that even Gru can't break in</div>
           <div className="accent-line" />
           <div className="mb-6 lg:mb-8">
             <Image
@@ -183,13 +168,13 @@ export default function Home() {
               href="https://cybercordon.vercel.app"
               target="_blank"
               rel="noopener noreferrer"
-              className="px-3 py-1.5 rounded-md font-semibold text-[#e0ffe0] border border-[#e0ffe0] bg-transparent hover:bg-[#e0ffe0] hover:text-black transition-all duration-200 text-center w-full max-w-[150px]"
+              className="px-3 py-1.5 rounded-md font-semibold text-black border  border-[#e0ffe0] bg-[#e0ffe0] hover:bg-teal-900 hover:border-teal-900 hover:text-[#e0ffe0] transition-all duration-200 text-center w-full max-w-[150px]"
             >
-              Visit
+              VAPT Services
             </a>
             <Link
               href="/aboutus"
-              className="px-3 py-1.5 rounded-md font-semibold text-black border border-[#e0ffe0] bg-[#e0ffe0] hover:bg-transparent hover:text-[#e0ffe0] transition-all duration-200 text-center w-full max-w-[150px]"
+              className="px-3 py-1.5 rounded-md font-semibold text-black border border-[#e0ffe0] bg-[#e0ffe0] hover:bg-teal-900 hover:border-teal-900 hover:text-[#e0ffe0] transition-all duration-200 text-center w-full max-w-[150px]"
             >
               About Us
             </Link>
@@ -213,47 +198,53 @@ export default function Home() {
             className="object-contain mb-16 w-48 lg:w-80"
             priority
           />
-          <div className="text-base lg:text-lg font-medium mb-12 lg:mb-16 text-gray-300 text-center max-w-2xl px-4">
+          <h1 className="text-base lg:text-lg font-medium mb-12 lg:mb-16 text-gray-300 text-center max-w-2xl px-4">
             The safest place to store your passwords —<br />zero-knowledge architecture &amp; two-layer encryption.
-          </div>
+          </h1>
           {/* Register and Login Buttons */}
           <div className="flex flex-col sm:flex-row gap-6 lg:gap-12 mb-12 lg:mb-16">
             <button
               onClick={(e) => {
                 e.preventDefault();
-                console.log('Register button clicked');
                 setShowRegisterModal(true);
               }}
-              className="w-full sm:w-32 px-8 py-3 rounded-md font-semibold neon-text border border-[color:var(--neon)] bg-transparent hover:bg-[color:var(--neon)] hover:text-white hover:shadow-lg hover:font-bold hover:!text-white transition-all duration-200 text-center"
+              className="w-full sm:w-32 px-8 py-3 rounded-md font-semibold  border border-yellow-500 bg-yellow-500 hover:bg-gray-600 hover:border-gray-600 text-center"
             >
               Register
             </button>
             <button
               onClick={(e) => {
                 e.preventDefault();
-                console.log('Login button clicked');
                 setShowLoginModal(true);
               }}
-              className="w-full sm:w-32 px-8 py-3 rounded-md font-semibold text-white border border-gray-500 bg-gray-900 hover:bg-gray-700 transition-all duration-200 text-center"
+              className="w-full sm:w-32 px-8 py-3 rounded-md font-semibold text-white border border-gray-600 bg-gray-600 hover:bg-teal-900 hover:border-teal-900 transition-all duration-200 text-center"
             >
               Login
             </button>
           </div>
           {/* Feature Boxes - Centered and Wider */}
-          <div className="grid grid-cols-1 gap-6 w-full max-w-2xl px-4 lg:px-2 justify-self-start">
-            <div className="flex flex-col items-start text-left w-full max-w-md">
-              <h3 className="text-lg font-bold neon-text mb-2">Zero-Knowledge Architecture</h3>
-              <p className="text-gray-300 text-sm">Your data is encrypted before it even leaves your device. Not even we can see your passwords.</p>
+          <section className="py-20 px-6 bg-#1a1b1f">
+            <div className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 text-center">
+              <div className="p-6 backdrop-blur-md bg-white/5 rounded-xl shadow">
+                <h3 className="text-xl font-semibold glow mb-2">Zero-Knowledge Architecture</h3>
+                <p className="text-slate-300 text-sm">
+                  Your data is encrypted before it even leaves your device. Not even we can see your passwords.
+                </p>
+              </div>
+              <div className="p-6 backdrop-blur-md bg-white/5 rounded-xl shadow">
+                <h3 className="text-xl font-semibold glow mb-2">Two-Layer Encryption</h3>
+                <p className="text-slate-300 text-sm">
+                  AES encryption on the frontend and backend ensures your credentials are secure — twice.
+                </p>
+              </div>
+              <div className="p-6 backdrop-blur-md bg-white/5 rounded-xl shadow">
+                <h3 className="text-xl font-semibold glow mb-2">Trustless by Design</h3>
+                <p className="text-slate-300 text-sm">
+                  Designed with security-first principles — we can&apos;t read, retrieve, or misuse your data.
+                </p>
+              </div>
             </div>
-            <div className="flex flex-col items-start text-left w-full max-w-md">
-              <h3 className="text-lg font-bold neon-text mb-2">Two-Layer Encryption</h3>
-              <p className="text-gray-300 text-sm">AES encryption on the frontend and backend ensures your credentials are secure — twice.</p>
-            </div>
-            <div className="flex flex-col items-start text-left w-full max-w-md">
-              <h3 className="text-lg font-bold neon-text mb-2">Trustless by Design</h3>
-              <p className="text-gray-300 text-sm">Designed with security-first principles — we can&apos;t read, retrieve, or misuse your data.</p>
-            </div>
-          </div>
+          </section>
         </div>
         {/* Top-right: logo.png image */}
         <div className="absolute top-4 lg:top-8 right-4 lg:right-12 z-20 flex items-center justify-end">
@@ -275,87 +266,86 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Login Modal */}
-      {showLoginModal && (
-        <div className="fixed top-0 right-0 h-full flex items-center justify-end z-50">
-          <div className="bg-[#181c1b] border border-[color:var(--neon)]/40 p-8 w-full max-w-md h-full flex flex-col">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold neon-text">Login</h2>
-              <button onClick={() => setShowLoginModal(false)} className="text-gray-400 hover:text-white text-2xl">&times;</button>
+      {/* Modals */}
+      {(showLoginModal || showRegisterModal) && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          {showLoginModal && (
+            <div className="bg-[#181c1b] p-8 w-full max-w-md rounded-lg shadow-xl relative z-50">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold neon-text">Login</h2>
+                <button onClick={() => setShowLoginModal(false)} className="text-gray-400 hover:text-white text-2xl">&times;</button>
+              </div>
+              <form onSubmit={handleLogin} className="flex flex-col space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Email</label>
+                  <input
+                    type="email"
+                    value={loginEmail}
+                    onChange={(e) => setLoginEmail(e.target.value)}
+                    required
+                    className="w-full px-4 py-2 bg-gray-800 border border-gray-600 rounded-md text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Password</label>
+                  <input
+                    type="password"
+                    value={loginPassword}
+                    onChange={(e) => setLoginPassword(e.target.value)}
+                    required
+                    className="w-full px-4 py-2 bg-gray-800 border border-gray-600 rounded-md text-white"
+                  />
+                </div>
+                <button type="submit" className="px-6 py-3 bg-[color:var(--neon)] text-black font-semibold rounded-md hover:bg-blue-400 transition-all duration-200">
+                  Login
+                </button>
+              </form>
             </div>
-            <form onSubmit={handleLogin} className="flex flex-col space-y-4 flex-1">
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Email</label>
-                <input
-                  type="email"
-                  value={loginEmail}
-                  onChange={(e) => setLoginEmail(e.target.value)}
-                  required
-                  className="w-full px-4 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:border-[color:var(--neon)] focus:outline-none"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Password</label>
-                <input
-                  type="password"
-                  value={loginPassword}
-                  onChange={(e) => setLoginPassword(e.target.value)}
-                  required
-                  className="w-full px-4 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:border-[color:var(--neon)] focus:outline-none"
-                />
-              </div>
-              <button type="submit" className="mt-auto px-6 py-3 bg-[color:var(--neon)] text-black font-semibold rounded-md hover:bg-blue-400 transition-all duration-200">
-                Login
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
+          )}
 
-      {/* Register Modal */}
-      {showRegisterModal && (
-        <div className="fixed top-0 right-0 h-full flex items-center justify-end z-50">
-          <div className="bg-[#181c1b] border border-[color:var(--neon)]/40 p-8 w-full max-w-md h-full flex flex-col">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold neon-text">Register</h2>
-              <button onClick={() => setShowRegisterModal(false)} className="text-gray-400 hover:text-white text-2xl">&times;</button>
+          {showRegisterModal && (
+            <div className="bg-[#181c1b] p-8 w-full max-w-md rounded-lg shadow-xl relative z-50">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold neon-text">Register</h2>
+                <button onClick={() => setShowRegisterModal(false)} className="text-gray-400 hover:text-white text-2xl">&times;</button>
+              </div>
+              <form onSubmit={handleRegister} className="flex flex-col space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Email</label>
+                  <input
+                    type="email"
+                    value={registerEmail}
+                    onChange={(e) => setRegisterEmail(e.target.value)}
+                    required
+                    className="w-full px-4 py-2 bg-gray-800 border border-gray-600 rounded-md text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Password</label>
+                  <input
+                    type="password"
+                    value={registerPassword}
+                    onChange={(e) => setRegisterPassword(e.target.value)}
+                    required
+                    className="w-full px-4 py-2 bg-gray-800 border border-gray-600 rounded-md text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Confirm Password</label>
+                  <input
+                    type="password"
+                    value={registerConfirmPassword}
+                    onChange={(e) => setRegisterConfirmPassword(e.target.value)}
+                    required
+                    className="w-full px-4 py-2 bg-gray-800 border border-gray-600 rounded-md text-white"
+                  />
+                </div>
+                <button type="submit" className="px-6 py-3 bg-[color:var(--neon)] text-black font-semibold rounded-md hover:bg-blue-400 transition-all duration-200">
+                  Register
+                </button>
+              </form>
             </div>
-            <form onSubmit={handleRegister} className="flex flex-col space-y-4 flex-1">
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Email</label>
-                <input
-                  type="email"
-                  value={registerEmail}
-                  onChange={(e) => setRegisterEmail(e.target.value)}
-                  required
-                  className="w-full px-4 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:border-[color:var(--neon)] focus:outline-none"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Password</label>
-                <input
-                  type="password"
-                  value={registerPassword}
-                  onChange={(e) => setRegisterPassword(e.target.value)}
-                  required
-                  className="w-full px-4 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:border-[color:var(--neon)] focus:outline-none"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Confirm Password</label>
-                <input
-                  type="password"
-                  value={registerConfirmPassword}
-                  onChange={(e) => setRegisterConfirmPassword(e.target.value)}
-                  required
-                  className="w-full px-4 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:border-[color:var(--neon)] focus:outline-none"
-                />
-              </div>
-              <button type="submit" className="mt-auto px-6 py-3 bg-[color:var(--neon)] text-black font-semibold rounded-md hover:bg-blue-400 transition-all duration-200">
-                Register
-              </button>
-            </form>
-          </div>
+          )}
         </div>
       )}
     </div>

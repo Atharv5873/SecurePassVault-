@@ -1,4 +1,4 @@
-// File: E:\Projects\SecurePassVault-\frontend\app\aboutus\page.tsx
+// File: C:\Users\vatan\Downloads\SecurePassVault--1\frontend\app\aboutus\page.tsx
 import * as entry from '../../../../app/aboutus/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

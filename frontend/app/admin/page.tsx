@@ -21,7 +21,6 @@ export default function AdminPage() {
     const checkAdminAccess = useCallback(async () => {
         const token = sessionStorage.getItem('token');
         if (!token) {
-            console.log('No token found, redirecting to home');
             router.push('/');
             return;
         }
@@ -33,27 +32,20 @@ export default function AdminPage() {
                 },
             });
 
-            console.log('Auth me response status:', res.status);
-
             if (!res.ok) {
-                console.log('Auth me failed, redirecting to home');
                 router.push('/');
                 return;
             }
 
             const userData = await res.json();
-            console.log('User data from /auth/me:', userData);
 
             if (!userData.is_admin) {
-                console.log('User is not admin, redirecting to vault');
                 toast.error('Admin access required');
                 router.push('/vault');
                 return;
             }
 
-            console.log('User is admin, staying on admin page');
         } catch (err) {
-            console.log('Error checking admin access:', err);
             router.push('/');
         }
     }, [router]);

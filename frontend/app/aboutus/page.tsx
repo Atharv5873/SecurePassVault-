@@ -13,7 +13,7 @@ const devs = [
     },
     {
         name: "Vatanesh Sharma",
-        role: "Front-End Developer & Ethical Hacker",
+        role: "Front-End Developer & Security Researcher",
         image: "/vat.jpg",
         linkedin: "https://www.linkedin.com/in/vatanesh-sharma-a39a2a22a/"
     }
@@ -196,8 +196,8 @@ export default function AboutUsPage() {
                     </h2>
                     <div className="flex flex-col md:flex-row gap-12 items-center justify-center w-full max-w-6xl z-10">
                         {devs.map((dev) => (
-                            <div key={dev.name} className="backdrop-blur-xl bg-white/5 border border-[color:var(--neon)]/60 shadow-2xl rounded-3xl p-12 flex flex-col items-center w-full max-w-md min-w-[320px] transition-transform hover:scale-105 hover:shadow-[0_0_40px_10px_var(--neon)]">
-                                <div className="w-48 h-48 mb-6 rounded-full overflow-hidden border-8 border-[color:var(--neon)] shadow-lg">
+                            <div key={dev.name} className="backdrop-blur-xl bg-white/5  shadow-2xl rounded-3xl p-12 flex flex-col items-center w-full max-w-md min-w-[320px] transition-transform hover:scale-105 hover:shadow-[0_0_40px_10px_var(--neon)]">
+                                <div className="w-48 h-48 mb-6 rounded-full overflow-hidden border-2 border-[color:var(--neon)] shadow-lg">
                                     <Image src={dev.image} alt={dev.name} width={192} height={192} className="object-cover w-full h-full" />
                                 </div>
                                 <h3 className="text-2xl font-bold text-white mb-2 drop-shadow">{dev.name}</h3>

@@ -7,7 +7,8 @@
   --white: #fff;
   --gray: #b0b0b0;
   --panel-dark: #101112;
-  --panel-glow: #1a1f1a;
+  --panel-glow: #1a1b1f;
+  --glow: #c8cbb9;
 }
 
 :root {
@@ -47,6 +48,19 @@ html {
   overflow: hidden;
 }
 
+.glow {
+  color: #e0ffe0;
+  /* Your text color */
+  text-shadow:
+    0 0 5px #e0ffe0,
+    /* Light glow */
+    0 0 10px #e0ffe0,
+    /* Medium glow */
+    0 0 15px #00a6ff,
+    /* Stronger glow */
+    0 0 20px #e5ff00;
+  /* Brightest glow */
+}
 .loading-progress::-webkit-progress-value {
   background-color: #2d91d4;
   border-radius: 9999px;
