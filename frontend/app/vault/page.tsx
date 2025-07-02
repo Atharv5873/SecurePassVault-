@@ -95,7 +95,7 @@ export default function VaultPage() {
                             </button>
                             <br />
                             <br />
-                            <img src="/saved.gif" alt="Vault" className="w-fill h-100 mt-4 hidden sm:block" />
+                            <img src="/saved.gif" alt="Vault" className="w-fill h-100 mt-4" />
                         </div>
                     </nav>
                 </div>
