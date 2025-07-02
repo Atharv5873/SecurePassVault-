@@ -21,7 +21,7 @@ app.include_router(utils_router.router)
 
 def ping_site():
     try:
-        url="https://securepassvault-bdtd.onrender.com/"
+        url="https://securepass-vault.onrender.com/"
         response=httpx.get(url,timeout=10)
         print(f"Pinged {url} | Status : {response.status_code}")
     except Exception as e:
