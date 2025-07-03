@@ -30,6 +30,35 @@ export default function VaultPage() {
         }
     }, [router]);
 
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+
+        const encryptedPassword = sessionStorage.getItem('vault-password');
+
+        if (!derivedKey || !encryptedPassword) {
+            sessionStorage.removeItem('token');
+            sessionStorage.removeItem('user-email');
+            sessionStorage.removeItem('vault-password');
+            sessionStorage.removeItem('salt');
+            router.replace('/');
+        }
+    }, [derivedKey, router]);
+    
+    useEffect(() => {
+        const checkKeyIntegrity = () => {
+            const token = sessionStorage.getItem('token');
+            const encryptedPassword = sessionStorage.getItem('vault-password');
+
+            if (!token || !encryptedPassword) {
+                router.replace('/');
+            }
+        };
+
+        const interval = setInterval(checkKeyIntegrity, 5000); // check every 5s
+        return () => clearInterval(interval);
+    }, [router]);
+
+
     const handleNewEntry = (newEntry: VaultEntry) => {
         setEntries((prev) => [...prev, newEntry]);
         setActiveTab('vault');
