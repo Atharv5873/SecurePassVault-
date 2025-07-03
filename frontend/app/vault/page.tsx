@@ -174,7 +174,7 @@ export default function VaultPage() {
                                 </div>
                             </div>
                         ) : activeTab === 'pw' ? (
-                            <div className="max-w-full lg:max-w-2xl mx-auto">
+                            <div className="max-w-full lg:max-w-6xl mx-auto">
                                 <div className=" rounded-2xl p-6 lg:p-8 shadow-xl">
                                     <PasswordChecker />
                                 </div>
