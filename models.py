@@ -23,8 +23,13 @@ class ProductKeyIn(BaseModel):
 class VerifyRequest(BaseModel):
     email: str
     otp: str
-    password: str
-    salt: str
+    salt: str       
+    verifier: str 
     
 class EmailRequest(BaseModel):
     email: str
+    
+class SRPVerifyRequest(BaseModel):
+    email: str
+    clientEphemeralPublic: str  # A
+    clientSessionProof: str     # M1
