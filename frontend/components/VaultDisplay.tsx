@@ -118,7 +118,11 @@ export default function VaultDisplay({
     const toggleVisibility = (id: string) => {
         setVisible((prev) => {
             const newSet = new Set(prev);
-            newSet.has(id) ? newSet.delete(id) : newSet.add(id);
+            if (newSet.has(id)) {
+                newSet.delete(id);
+            } else {
+                newSet.add(id);
+            }
             return newSet;
         });
     };
