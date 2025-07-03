@@ -1,6 +1,6 @@
 'use client';
 import React, { useEffect, useState, useRef } from 'react';
-import { Copy, Eye, EyeOff, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
+import { Copy, Eye, EyeOff, Trash2, ChevronDown, ChevronUp, ChevronRight } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useCrypto } from '@/contexts/cryptocontext';
 import { decryptData } from '@/lib/crypto';
@@ -11,32 +11,40 @@ type VaultEntry = {
     username: string;
 };
 
+type LicenseEntry = {
+    id: string;
+    product_name: string;
+    description: string;
+};
+
 type VaultDisplayProps = {
     userToken: string;
-    entries: VaultEntry[];
-    setEntries: React.Dispatch<React.SetStateAction<VaultEntry[]>>;
-    onEntriesLoaded?: (loadedEntries: VaultEntry[]) => void;
+    entries: (VaultEntry | LicenseEntry)[];
+    setEntries: React.Dispatch<React.SetStateAction<(VaultEntry | LicenseEntry)[]>>;
+    onEntriesLoaded?: (loadedEntries: (VaultEntry | LicenseEntry)[]) => void;
 };
 
 export default function VaultDisplay({ userToken, entries, setEntries, onEntriesLoaded }: VaultDisplayProps) {
     const { derivedKey } = useCrypto();
-    const [decryptedPasswords, setDecryptedPasswords] = useState<Record<string, string>>({});
+    const [decryptedData, setDecryptedData] = useState<Record<string, string>>({});
+    const [visible, setVisible] = useState<Set<string>>(new Set());
     const [expandedId, setExpandedId] = useState<string | null>(null);
-    const [visiblePasswords, setVisiblePasswords] = useState<Set<string>>(new Set());
     const [isLoading, setIsLoading] = useState(false);
     const [hasLoaded, setHasLoaded] = useState(false);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [showPasswords, setShowPasswords] = useState(true);
+    const [showKeys, setShowKeys] = useState(true);
+
     const setEntriesRef = useRef(setEntries);
     const onEntriesLoadedRef = useRef(onEntriesLoaded);
     const hasInitializedRef = useRef(false);
 
-    // Update refs when props change
     useEffect(() => {
         setEntriesRef.current = setEntries;
         onEntriesLoadedRef.current = onEntriesLoaded;
     }, [setEntries, onEntriesLoaded]);
 
     useEffect(() => {
-
         if (userToken && !hasLoaded && !hasInitializedRef.current) {
             hasInitializedRef.current = true;
 
@@ -44,34 +52,31 @@ export default function VaultDisplay({ userToken, entries, setEntries, onEntries
                 try {
                     setIsLoading(true);
 
-                    const res = await fetch(`/credentials`, {
-                        headers: {
-                            Authorization: `Bearer ${userToken}`,
-                        },
-                    });
+                    const [resCredentials, resProducts] = await Promise.all([
+                        fetch(`/credentials`, {
+                            headers: { Authorization: `Bearer ${userToken}` },
+                        }),
+                        fetch(`https://securepassvault-1.onrender.com/products/`, {
+                            headers: { Authorization: `Bearer ${userToken}` },
+                        }),
+                    ]);
 
-
-                    const data = await res.json();
-
-                    if (!res.ok) {
-                        console.error('API Error:', res.status, data);
-                        throw new Error(`API Error: ${res.status} - ${data.detail || 'Unknown error'}`);
+                    if (!resCredentials.ok || !resProducts.ok) {
+                        const errCredentials = await resCredentials.json().catch(() => ({}));
+                        const errProducts = await resProducts.json().catch(() => ({}));
+                        throw new Error(errCredentials?.detail || errProducts?.detail || 'Failed to fetch entries');
                     }
 
-                    if (!Array.isArray(data)) {
-                        console.error('Invalid data format:', data);
-                        throw new Error('Invalid response format');
-                    }
+                    const dataCredentials = await resCredentials.json();
+                    const dataProducts = await resProducts.json();
+                    const combined = [...dataCredentials, ...dataProducts];
 
-                    setEntriesRef.current(data);
+                    setEntries(combined); // ✅ KEY FIX HERE
                     setHasLoaded(true);
-                    if (onEntriesLoadedRef.current) {
-                        onEntriesLoadedRef.current(data);
-                    }
+                    onEntriesLoadedRef.current?.(combined);
                 } catch (err) {
                     console.error('[Vault Fetch Error]', err);
-                    toast.error(`Error loading entries: ${err instanceof Error ? err.message : 'Unknown error'}`);
-                    setHasLoaded(true);
+                    toast.error('Failed to load entries');
                 } finally {
                     setIsLoading(false);
                 }
@@ -79,157 +84,211 @@ export default function VaultDisplay({ userToken, entries, setEntries, onEntries
 
             fetchEntries();
         }
-    }, [userToken, hasLoaded]);
+    }, [userToken, hasLoaded, setEntries]);
+      
 
-    if (isLoading) {
-        return (
-            <div className="flex items-center justify-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[color:var(--neon)]"></div>
-                <span className="ml-3 text-gray-400">Loading entries...</span>
-            </div>
-        );
-    }
+    const reveal = async (id: string, endpoint: string) => {
+        if (!derivedKey) {
+            toast.error('Encryption key not available.');
+            return;
+        }
 
-    if (hasLoaded && entries.length === 0) {
-        return (
-            <div className="text-center py-16">
-                <div className="w-24 h-24 mx-auto mb-6 bg-[#181c1b] rounded-full flex items-center justify-center shadow-lg">
-                    <svg className="w-12 h-12 text-[color:var(--neon)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                    </svg>
-                </div>
-                <h3 className="text-xl font-semibold text-gray-300 mb-2">Your vault is empty</h3>
-                <p className="text-gray-400 mb-6">Start by adding your first secure entry</p>
-            </div>
-        );
-    }
-
-    const revealPassword = async (id: string) => {
         try {
-            if (!derivedKey) {
-                toast.error('Encryption key not available. Please login again.');
-                return;
-            }
-
-            const res = await fetch(`/credentials/reveal/${id}`, {
-                headers: {
-                    Authorization: `Bearer ${userToken}`,
-                },
+            const res = await fetch(endpoint, {
+                headers: { Authorization: `Bearer ${userToken}` },
             });
 
-            if (!res.ok) throw new Error(await res.text());
+            const json = await res.json();
+            const encrypted = typeof json === 'string'
+                ? json
+                : json.password || json.license_key || json.key || json.license;
 
-            const { password: encryptedPassword } = await res.json();
+            if (!encrypted) throw new Error('No encrypted field in response.');
 
-            const decrypted = await decryptData(derivedKey, encryptedPassword);
-            setDecryptedPasswords((prev) => ({ ...prev, [id]: decrypted }));
+
+            const decrypted = await decryptData(derivedKey, encrypted);
+            setDecryptedData(prev => ({ ...prev, [id]: decrypted }));
         } catch (err) {
-            console.error(`[Reveal Error for ${id}]`, err);
-            toast.error('Failed to reveal password.');
+            console.error('[Reveal Error]', err);
+            toast.error('Reveal failed.');
         }
     };
+    
 
-    const handleExpand = (id: string) => {
-        setExpandedId(prev => (prev === id ? null : id));
-        if (!decryptedPasswords[id]) {
-            revealPassword(id);
-        }
-    };
-
-    const togglePasswordVisibility = (id: string) => {
-        setVisiblePasswords(prev => {
+    const toggleVisibility = (id: string) => {
+        setVisible(prev => {
             const newSet = new Set(prev);
-            if (newSet.has(id)) {
-                newSet.delete(id);
-            } else {
-                newSet.add(id);
-            }
+            newSet.has(id) ? newSet.delete(id) : newSet.add(id);
             return newSet;
         });
     };
 
-    const handleDelete = async (id: string) => {
-        if (!window.confirm('Are you sure you want to delete this password?')) return;
+    const handleCopy = (id: string) => {
+        const text = decryptedData[id];
+        if (text) {
+            navigator.clipboard.writeText(text);
+            toast.success('Copied!');
+        } else {
+            toast.error('Reveal first.');
+        }
+    };
+
+    const handleDelete = async (id: string, isPassword: boolean) => {
+        if (!confirm('Are you sure?')) return;
 
         try {
-            const res = await fetch(`/credentials/delete/${id}`, {
+            const endpoint = isPassword ? `/credentials/delete/${id}` : `https://securepassvault-1.onrender.com/products/delete/${id}`;
+            const res = await fetch(endpoint, {
                 method: 'DELETE',
-                headers: {
-                    Authorization: `Bearer ${userToken}`,
-                },
+                headers: { Authorization: `Bearer ${userToken}` },
             });
-
             if (!res.ok) throw new Error(await res.text());
-
-            setEntries((prev) => prev.filter((entry) => entry.id !== id));
+            setEntries(prev => prev.filter(entry => entry.id !== id));
             toast.success('Deleted!');
         } catch (err) {
             console.error('[Delete Error]', err);
-            toast.error('Delete failed.');
+            toast.error('Delete failed');
         }
     };
 
-    const handleCopy = (id: string) => {
-        const text = decryptedPasswords[id];
-        if (text) {
-            navigator.clipboard.writeText(text);
-            toast.success('Password copied!');
-        } else {
-            toast.error('Reveal password first.');
-        }
-    };
+    const filteredPasswords = entries
+        .filter((e): e is VaultEntry => 'site' in e && 'username' in e)
+        .filter(e => `${e.site} ${e.username}`.toLowerCase().includes(searchTerm.toLowerCase()))
+        .sort((a, b) => a.site.localeCompare(b.site));
 
+    const filteredLicenses = entries
+        .filter((e): e is LicenseEntry => {
+            return typeof (e as any).product_name === 'string' && typeof (e as any).description === 'string';
+        })
+        .filter(e => `${e.product_name} ${e.description}`.toLowerCase().includes(searchTerm.toLowerCase()))
+        .sort((a, b) => a.product_name.localeCompare(b.product_name));
+    
     return (
-        <div className="mt-8 max-w-2xl mx-auto w-full">
-            <ul className="space-y-4">
-                {entries.map((entry) => {
-                    const expanded = expandedId === entry.id;
-                    const passwordVisible = visiblePasswords.has(entry.id);
-                    return (
-                        <li key={entry.id} className={`rounded-xl bg-white/5 shadow-lg transition-all duration-300 ${expanded ? 'ring-2 ring-transparent' : ''}`}>
-                            <button
-                                className="w-full flex items-center justify-between px-6 py-4 focus:outline-none group"
-                                onClick={() => handleExpand(entry.id)}
-                                aria-expanded={expanded}
-                            >
-                                <div className="flex flex-col text-left">
-                                    <span className="text-lg font-semibold neon-text group-hover:underline">{entry.site}</span>
-                                    <span className="text-gray-400 text-sm">{entry.username}</span>
-                                </div>
-                                <span className="ml-4 text-[color:var(--neon)]">
-                                    {expanded ? <ChevronUp size={24} /> : <ChevronDown size={24} />}
-                                </span>
-                            </button>
-                            {expanded && (
-                                <div className="px-6 pb-4 pt-2 animate-fade-in">
-                                    <div className="flex flex-col gap-2 mb-2">
-                                        <label className="text-xs text-gray-400">Password</label>
-                                        <span className="text-base text-white tracking-wider select-all">
-                                            {passwordVisible ? (decryptedPasswords[entry.id] || '••••••••••') : '••••••••••'}
-                                        </span>
-                                        <div className="flex gap-2 mt-1">
-                                            <button
-                                                onClick={() => togglePasswordVisibility(entry.id)}
-                                                title={passwordVisible ? "Hide password" : "Show password"}
-                                                className="text-[color:var(--neon)] hover:text-blue-400 p-1 rounded"
-                                            >
-                                                {passwordVisible ? <EyeOff size={16} /> : <Eye size={16} />}
-                                            </button>
-                                            <button onClick={() => handleCopy(entry.id)} title="Copy" className="text-[color:var(--neon)] hover:text-blue-400 p-1 rounded">
-                                                <Copy size={16} />
-                                            </button>
+        <div className="mt-6 max-w-2xl mx-auto w-full">
+            <input
+                type="text"
+                placeholder="Search entries..."
+                className="w-full mb-6 px-4 py-3 rounded-xl bg-white/5 border border-[color:var(--neon)]/30 text-white placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[color:var(--neon)]/50"
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+            />
+
+            {/* Password Section */}
+            <div className="mb-6">
+                <button
+                    className="flex items-center gap-2 text-lg font-semibold text-white mb-2"
+                    onClick={() => setShowPasswords(p => !p)}
+                >
+                    {showPasswords ? <ChevronDown /> : <ChevronRight />}
+                    Passwords
+                </button>
+                {showPasswords && filteredPasswords.length > 0 ? (
+                    <ul className="space-y-4">
+                        {filteredPasswords.map(entry => {
+                            const expanded = expandedId === entry.id;
+                            const visibleVal = visible.has(entry.id);
+                            return (
+                                <li key={entry.id} className="rounded-xl bg-white/5 p-4 shadow">
+                                    <div
+                                        className="cursor-pointer flex justify-between items-center"
+                                        onClick={() => {
+                                            setExpandedId(expanded ? null : entry.id);
+                                            if (!decryptedData[entry.id]) {
+                                                reveal(entry.id, `/credentials/reveal/${entry.id}`);
+                                            }
+                                        }}
+                                    >
+                                        <div>
+                                            <p className="font-medium neon-text">{entry.site}</p>
+                                            <p className="text-gray-400 text-sm">{entry.username}</p>
                                         </div>
+                                        {expanded ? <ChevronUp /> : <ChevronDown />}
                                     </div>
-                                    <div className="flex gap-4 mt-2">
-                                        <button onClick={() => handleExpand(entry.id)} className="px-4 py-2 rounded-md bg-gray-800 text-gray-200 hover:bg-gray-700 transition">Close</button>
-                                        <button onClick={() => handleDelete(entry.id)} className="px-4 py-2 rounded-md bg-red-600 text-white hover:bg-red-700 transition flex items-center gap-1"><Trash2 size={16} /> Delete</button>
+                                    {expanded && (
+                                        <div className="mt-2">
+                                            <label className="text-xs text-gray-400">Password</label>
+                                            <p className="text-base text-white break-all">
+                                                {visibleVal ? decryptedData[entry.id] || '••••••••' : '••••••••'}
+                                            </p>
+                                            <div className="flex gap-2 mt-2">
+                                                <button onClick={() => toggleVisibility(entry.id)}>
+                                                    {visibleVal ? <EyeOff size={16} /> : <Eye size={16} />}
+                                                </button>
+                                                <button onClick={() => handleCopy(entry.id)}><Copy size={16} /></button>
+                                                <button
+                                                    onClick={() => handleDelete(entry.id, true)}
+                                                    className="text-red-500"
+                                                >
+                                                    <Trash2 size={16} />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </li>
+                            );
+                        })}
+                    </ul>
+                ) : showPasswords && <p className="text-gray-400">No passwords found.</p>}
+            </div>
+
+            {/* License Key Section */}
+            <div>
+                <button
+                    className="flex items-center gap-2 text-lg font-semibold text-white mb-2"
+                    onClick={() => setShowKeys(p => !p)}
+                >
+                    {showKeys ? <ChevronDown /> : <ChevronRight />}
+                    Product Keys
+                </button>
+                {showKeys && filteredLicenses.length > 0 ? (
+                    <ul className="space-y-4">
+                        {filteredLicenses.map(entry => {
+                            const expanded = expandedId === entry.id;
+                            const visibleVal = visible.has(entry.id);
+                            return (
+                                <li key={entry.id} className="rounded-xl bg-white/5 p-4 shadow">
+                                    <div
+                                        className="cursor-pointer flex justify-between items-center"
+                                        onClick={() => {
+                                            setExpandedId(expanded ? null : entry.id);
+                                            if (!decryptedData[entry.id]) {
+                                                reveal(entry.id, `https://securepassvault-1.onrender.com/products/reveal/${entry.id}`);
+                                            }
+                                        }}
+                                    >
+                                        <div>
+                                            <p className="font-medium neon-text">{entry.product_name}</p>
+                                            <p className="text-gray-400 text-sm">{entry.description || 'No description provided.'}</p>
+
+                                        </div>
+                                        {expanded ? <ChevronUp /> : <ChevronDown />}
                                     </div>
-                                </div>
-                            )}
-                        </li>
-                    );
-                })}
-            </ul>
+                                    {expanded && (
+                                        <div className="mt-2">
+                                            <label className="text-xs text-gray-400">License Key</label>
+                                            <p className="text-base text-white break-all">
+                                                {visibleVal ? decryptedData[entry.id] || '••••••••' : '••••••••'}
+                                            </p>
+                                            <div className="flex gap-2 mt-2">
+                                                <button onClick={() => toggleVisibility(entry.id)}>
+                                                    {visibleVal ? <EyeOff size={16} /> : <Eye size={16} />}
+                                                </button>
+                                                <button onClick={() => handleCopy(entry.id)}><Copy size={16} /></button>
+                                                <button
+                                                    onClick={() => handleDelete(entry.id, false)}
+                                                    className="text-red-500"
+                                                >
+                                                    <Trash2 size={16} />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </li>
+                            );
+                        })}
+                    </ul>
+                ) : showKeys && <p className="text-gray-400">No product keys found.</p>}
+            </div>
         </div>
     );
 }
