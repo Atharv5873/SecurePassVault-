@@ -4,7 +4,7 @@ import toast from 'react-hot-toast';
 import { encryptData } from '@/lib/crypto/encryptdata';
 import { useCrypto } from '@/contexts/cryptocontext';
 import { LicenseEntry } from '@/app/types/vault';
-import { Lock, User, Globe, Eye, EyeOff, LetterText } from 'lucide-react';
+import { Lock, Globe, Eye, EyeOff, LetterText } from 'lucide-react';
 
 type LicenseProps = {
     userToken: string;
