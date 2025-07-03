@@ -13,3 +13,8 @@ class CredentialIn(BaseModel):
     site:str
     username:str
     password:str
+    
+class ProductKeyIn(BaseModel):
+    product_name:str
+    license_key:str
+    description:str | None  = None

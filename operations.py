@@ -3,6 +3,9 @@ from encryptor import encrypt_password, decrypt_password
 from bson import ObjectId
 
 users_collection = db["users"]
+products_collection=db["products"]
+
+### Creds:
 
 def get_user_key(user_id):
     user = users_collection.find_one({"_id": ObjectId(user_id)})
@@ -62,3 +65,25 @@ def delete_credential(cred_id, user_id):
             "username": cred["username"]
         }
     return False
+
+### Product Key:
+
+def add_product_key(product_name,license_key,description,user_id):
+    key=get_user_key(user_id)
+    encrypted_license_key=encrypt_password(license_key,key)
+    result=products_collection.insert_one({
+        "product_name":product_name,
+        "license_key":encrypted_license_key,
+        "description":description,
+        "user_id": ObjectId(user_id)
+    })
+    return str(result.inserted_id)
+
+def view_product_keys(user_id):
+    products=products_collection.find({"user_id":ObjectId(user_id)})
+    return [{
+        "id":str(c["_id"]),
+        "product_name":(c["product_name"]),
+        "description":(c["description"])
+    } for c in products]
+
