@@ -27,7 +27,6 @@ export default function License({ userToken, onNewEntry }: LicenseProps) {
         const { description, productName, licenseKey } = form;
         if (!productName) return toast.error('Product name is required');
         if (!licenseKey) return toast.error('License key is required');
-        if (!description) return toast.error('Description is required');
 
         try {
             setLoading(true);
@@ -44,9 +43,9 @@ export default function License({ userToken, onNewEntry }: LicenseProps) {
                 body: JSON.stringify({
                     product_name: productName,
                     license_key: encryptedLicenseKey,
-                    description,
+                    ...(description && { description }), // only include if non-empty
                 }),
-            });
+            });                
 
             const saved = await res.json();
             if (!res.ok) throw new Error('Save failed');
@@ -130,10 +129,9 @@ export default function License({ userToken, onNewEntry }: LicenseProps) {
                     <div className="relative">
                         <input
                             className="w-full px-4 py-3 pl-12 rounded-xl bg-white/5 border border-[color:var(--neon)]/30 text-white placeholder-gray-400 focus:outline-none focus:border-[color:var(--neon)]/60 focus:ring-1 focus:ring-[color:var(--neon)]/30 transition-all duration-200"
-                            placeholder="e.g. GitHub, Google, Facebook"
+                            placeholder="eg. Video Editing Software, IDE, etc."
                             value={form.description}
                             onChange={(e) => setForm({ ...form, description: e.target.value })}
-                            required
                         />
                         <Globe size={18} className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
                     </div>

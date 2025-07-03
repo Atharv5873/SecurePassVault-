@@ -268,7 +268,7 @@ export default function VaultDisplay({
                                     >
                                         <div>
                                             <p className="font-medium neon-text">{entry.product_name}</p>
-                                            <p className="text-gray-400 text-sm">{entry.description || 'No description provided.'}</p>
+                                            <p className="text-gray-400 text-sm">{entry.description}</p>
                                         </div>
                                         {expanded ? <ChevronUp /> : <ChevronDown />}
                                     </div>

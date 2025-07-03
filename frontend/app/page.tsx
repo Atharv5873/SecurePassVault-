@@ -300,7 +300,8 @@ export default function Home() {
                     value={loginEmail}
                     onChange={(e) => setLoginEmail(e.target.value)}
                     required
-                    className="w-full px-4 py-2 bg-gray-800 border border-gray-600 rounded-md text-white"
+                    placeholder="Enter your email"
+                    className="w-full px-4 py-2 bg-[#181c1b] border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-[color:var(--neon)]"
                   />
                 </div>
                 <div>
@@ -310,7 +311,8 @@ export default function Home() {
                     value={loginPassword}
                     onChange={(e) => setLoginPassword(e.target.value)}
                     required
-                    className="w-full px-4 py-2 bg-gray-800 border border-gray-600 rounded-md text-white"
+                    placeholder="Enter your password"
+                    className="w-full px-4 py-2 bg-[#181c1b] border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-[color:var(--neon)]"
                   />
                 </div>
                 <button type="submit" className="px-6 py-3 bg-[color:var(--neon)] text-black font-semibold rounded-md hover:bg-blue-400 transition-all duration-200">
@@ -333,7 +335,7 @@ export default function Home() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="Enter your email"
-                    className="w-full px-4 py-2 border border-gray-600 bg-black text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-[color:var(--neon)]"
+                    className="w-full px-4 py-2 border border-gray-600 bg-[#181c1b] text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-[color:var(--neon)]"
                   />
 
                   <button
@@ -384,7 +386,7 @@ export default function Home() {
                     value={otp}
                     onChange={(e) => setOtp(e.target.value)}
                     required
-                    className="w-full px-4 py-2 bg-black border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-[color:var(--neon)]"
+                    className="w-full px-4 py-2 bg-[#181c1b] border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-[color:var(--neon)]"
                   />
                 </div>
                 <div>
@@ -395,7 +397,7 @@ export default function Home() {
                     value={registerPassword}
                     onChange={(e) => setRegisterPassword(e.target.value)}
                     required
-                    className="w-full px-4 py-2 bg-black border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-[color:var(--neon)]"
+                    className="w-full px-4 py-2 bg-[#181c1b] border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-[color:var(--neon)]"
                   />
                 </div>
                 <div>
@@ -406,7 +408,7 @@ export default function Home() {
                     value={registerConfirmPassword}
                     onChange={(e) => setRegisterConfirmPassword(e.target.value)}
                     required
-                    className="w-full px-4 py-2 bg-black border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-[color:var(--neon)]"
+                    className="w-full px-4 py-2 bg-[#181c1b] border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-[color:var(--neon)]"
                   />
                 </div>
                 <button type="submit" className="px-6 py-3 bg-[color:var(--neon)] text-black font-semibold rounded-md hover:bg-blue-400 transition-all duration-200">
