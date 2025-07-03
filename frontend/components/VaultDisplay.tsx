@@ -49,8 +49,10 @@ export default function VaultDisplay({
     }, [setEntries, onEntriesLoaded]);
 
     useEffect(() => {
-        if (!userToken || hasLoaded || hasInitializedRef.current) return;
-
+        if (!userToken || hasLoaded || hasInitializedRef.current) {
+            return;
+        }
+          
         hasInitializedRef.current = true;
 
         const fetchEntries = async () => {
