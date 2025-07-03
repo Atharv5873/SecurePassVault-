@@ -361,6 +361,7 @@ export default function Home() {
                           setMessage(data.detail || data.error || 'Failed to send OTP.');
                         }
                       } catch (err) {
+                        console.error(err);
                         setMessage('Something went wrong.');
                       } finally {
                         setIsSending(false);
