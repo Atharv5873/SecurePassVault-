@@ -4,15 +4,16 @@ import { useRouter } from 'next/navigation';
 import VaultForm from '@/components/vaultform';
 import VaultDisplay from '@/components/VaultDisplay';
 import LogoutButton from '@/components/logoutbutton';
-import type { VaultEntry } from '../types/vault';
+import type { LicenseEntry, VaultEntry } from '../types/vault';
 import Image from 'next/image';
 import { useCrypto } from '@/contexts/cryptocontext';
 import PasswordChecker from '@/components/passwordchecker';
+import License from '@/components/licenseForm';
 
 export default function VaultPage() {
     const [token, setToken] = useState<string | null>(null);
-    const [entries, setEntries] = useState<VaultEntry[]>([]);
-    const [activeTab, setActiveTab] = useState<'vault' | 'add' | 'pw'>('vault');
+    const [entries, setEntries] = useState<(VaultEntry | LicenseEntry)[]>([]);
+    const [activeTab, setActiveTab] = useState<'vault' | 'add' | 'pw' | 'addkey'>('vault');
     const [entriesLoaded, setEntriesLoaded] = useState(false);
     const [userEmail, setUserEmail] = useState<string>('');
     const router = useRouter();
@@ -32,39 +33,33 @@ export default function VaultPage() {
 
     useEffect(() => {
         if (typeof window === 'undefined') return;
-
         const encryptedPassword = sessionStorage.getItem('vault-password');
 
         if (!derivedKey || !encryptedPassword) {
-            sessionStorage.removeItem('token');
-            sessionStorage.removeItem('user-email');
-            sessionStorage.removeItem('vault-password');
-            sessionStorage.removeItem('salt');
+            sessionStorage.clear();
             router.replace('/');
         }
     }, [derivedKey, router]);
-    
+
     useEffect(() => {
         const checkKeyIntegrity = () => {
             const token = sessionStorage.getItem('token');
             const encryptedPassword = sessionStorage.getItem('vault-password');
-
             if (!token || !encryptedPassword) {
                 router.replace('/');
             }
         };
 
-        const interval = setInterval(checkKeyIntegrity, 5000); // check every 5s
+        const interval = setInterval(checkKeyIntegrity, 5000);
         return () => clearInterval(interval);
     }, [router]);
 
-
-    const handleNewEntry = (newEntry: VaultEntry) => {
+    const handleNewEntry = (newEntry: VaultEntry | LicenseEntry) => {
         setEntries((prev) => [...prev, newEntry]);
         setActiveTab('vault');
     };
 
-    const handleEntriesLoaded = (loadedEntries: VaultEntry[]) => {
+    const handleEntriesLoaded = (loadedEntries: (VaultEntry | LicenseEntry)[]) => {
         setEntries(loadedEntries);
         setEntriesLoaded(true);
     };
@@ -89,9 +84,8 @@ export default function VaultPage() {
 
     return (
         <div className="min-h-screen bg-black text-white flex flex-col lg:flex-row">
-            {/* Left Panel */}
+            {/* Sidebar */}
             <div className="w-full lg:w-80 lg:fixed lg:top-0 lg:left-0 lg:bottom-0 bg-black border-r border-[color:var(--neon)]/20 z-10 flex flex-col h-screen">
-                {/* Top and Scrollable Content */}
                 <div className="flex-1 flex flex-col overflow-y-auto">
                     <div className="p-4 lg:p-6 border-b border-[color:var(--neon)]/20">
                         <div className="flex items-center space-x-3">
@@ -121,7 +115,16 @@ export default function VaultPage() {
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                                 </svg>
-                                <span>Add Entry</span>
+                                <span>Add Credential</span>
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('addkey')}
+                                className={`w-full text-left px-4 py-3 rounded-lg transition-all duration-200 flex items-center space-x-3 ${activeTab === 'addkey' ? 'bg-[color:var(--neon)]/20 border border-[color:var(--neon)]/40 neon-text' : 'text-gray-300 hover:bg-gray-800/50 hover:text-white'}`}
+                            >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                </svg>
+                                <span>Add Product Key</span>
                             </button>
                             <button
                                 onClick={() => setActiveTab('pw')}
@@ -141,7 +144,6 @@ export default function VaultPage() {
                     </nav>
                 </div>
 
-                {/* Fixed Bottom User Info */}
                 <div className="p-4 lg:p-6 border-t border-[color:var(--neon)]/20">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-3">
@@ -158,24 +160,29 @@ export default function VaultPage() {
                 </div>
             </div>
 
-            {/* Right Panel (Scrollable) */}
+            {/* Main content */}
             <div className="flex-1 lg:ml-80 min-h-screen overflow-y-auto bg-[#0d0e10] flex flex-col">
                 <header className="bg-[#181c1b]/50 backdrop-blur-sm border-b border-[color:var(--neon)]/20 p-4 lg:p-6">
                     <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
                         <div>
                             <h2 className="text-xl lg:text-2xl font-bold">
-                                {activeTab === 'vault'
-                                    ? 'My Secure Vault'
-                                    : activeTab === 'add'
-                                        ? 'Add New Entry'
-                                        : 'Password Strength Checker'}
+                                {{
+                                    vault: 'My Secure Vault',
+                                    add: 'Add New Entry',
+                                    addkey: 'Add Product Key',
+                                    pw: 'Password Strength Checker',
+                                }[activeTab]}
                             </h2>
                             <p className="text-gray-400 text-sm">
                                 {activeTab === 'vault'
-                                    ? (entriesLoaded ? `${entries.length} entries stored securely` : 'Loading entries...')
+                                    ? entriesLoaded
+                                        ? `${entries.length} entries stored securely`
+                                        : 'Loading entries...'
                                     : activeTab === 'add'
                                         ? 'Create a new secure entry'
-                                        : 'Check the strength of your passwords'}
+                                        : activeTab === 'addkey'
+                                            ? 'Store product license keys securely'
+                                            : 'Check the strength of your passwords'}
                             </p>
                         </div>
                         <div className="flex items-center space-x-2 text-sm text-gray-400">
@@ -188,27 +195,31 @@ export default function VaultPage() {
                 <main className="flex-1 p-4 lg:p-6">
                     <div className="max-w-full lg:max-w-6xl mx-auto">
                         {activeTab === 'vault' ? (
-                            <div className="space-y-6">
-                                <VaultDisplay
-                                    userToken={token}
-                                    entries={entries}
-                                    setEntries={setEntries}
-                                    onEntriesLoaded={handleEntriesLoaded}
-                                />
-                            </div>
+                            <VaultDisplay
+                                userToken={token}
+                                entries={entries}
+                                setEntries={setEntries}
+                                onEntriesLoaded={handleEntriesLoaded}
+                            />
                         ) : activeTab === 'add' ? (
-                            <div className="max-w-full lg:max-w-2xl mx-auto">
+                            <div className="max-w-2xl mx-auto">
                                 <div className="bg-[#181c1b] border border-[color:var(--neon)]/30 rounded-2xl p-6 lg:p-8 shadow-xl">
                                     <VaultForm userToken={token} onNewEntry={handleNewEntry} />
                                 </div>
                             </div>
-                        ) : activeTab === 'pw' ? (
-                            <div className="max-w-full lg:max-w-6xl mx-auto">
-                                <div className=" rounded-2xl p-6 lg:p-8 shadow-xl">
+                        ) : activeTab === 'addkey' ? (
+                            <div className="max-w-2xl mx-auto">
+                                <div className="bg-[#181c1b] border border-[color:var(--neon)]/30 rounded-2xl p-6 lg:p-8 shadow-xl">
+                                    <License userToken={token} onNewEntry={handleNewEntry} />
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="max-w-6xl mx-auto">
+                                <div className="rounded-2xl p-6 lg:p-8 shadow-xl">
                                     <PasswordChecker />
                                 </div>
                             </div>
-                        ) : null}
+                        )}
                     </div>
                 </main>
             </div>

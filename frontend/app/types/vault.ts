@@ -4,3 +4,8 @@ export type VaultEntry = {
     username: string;
 };
   
+export type LicenseEntry = {
+    product_name: string;
+    id: string;
+    description: string;
+};
