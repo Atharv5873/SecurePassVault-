@@ -458,21 +458,40 @@
 
 import { useEffect, useState } from 'react';
 
+const COUNTDOWN_KEY = 'maintenanceCountdownStart';
+const COUNTDOWN_DURATION = 12 * 60 * 60 * 1000; // 12 hours in ms
+
 export default function MaintenancePage() {
-  const [timeLeft, setTimeLeft] = useState(12 * 60 * 60); // 12 hours in seconds
+  const [timeLeft, setTimeLeft] = useState<number>(COUNTDOWN_DURATION);
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setTimeLeft((prev) => (prev > 0 ? prev - 1 : 0));
-    }, 1000);
+    const now = Date.now();
+    let start = localStorage.getItem(COUNTDOWN_KEY);
 
-    return () => clearInterval(timer);
+    if (!start) {
+      localStorage.setItem(COUNTDOWN_KEY, now.toString());
+      start = now.toString();
+    }
+
+    const startTime = parseInt(start);
+    const endTime = startTime + COUNTDOWN_DURATION;
+
+    const updateTimer = () => {
+      const remaining = Math.max(endTime - Date.now(), 0);
+      setTimeLeft(remaining);
+    };
+
+    updateTimer();
+    const interval = setInterval(updateTimer, 1000);
+
+    return () => clearInterval(interval);
   }, []);
 
-  const formatTime = (seconds: number) => {
-    const hrs = Math.floor(seconds / 3600);
-    const mins = Math.floor((seconds % 3600) / 60);
-    const secs = seconds % 60;
+  const formatTime = (ms: number) => {
+    const totalSeconds = Math.floor(ms / 1000);
+    const hrs = Math.floor(totalSeconds / 3600);
+    const mins = Math.floor((totalSeconds % 3600) / 60);
+    const secs = totalSeconds % 60;
     return `${hrs.toString().padStart(2, '0')}h : ${mins
       .toString()
       .padStart(2, '0')}m : ${secs.toString().padStart(2, '0')}s`;
@@ -488,3 +507,4 @@ export default function MaintenancePage() {
     </div>
   );
 }
+
