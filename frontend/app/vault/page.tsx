@@ -12,7 +12,7 @@ import PasswordChecker from '@/components/passwordchecker';
 export default function VaultPage() {
     const [token, setToken] = useState<string | null>(null);
     const [entries, setEntries] = useState<VaultEntry[]>([]);
-    const [activeTab, setActiveTab] = useState<'vault' | 'add'>('vault');
+    const [activeTab, setActiveTab] = useState<'vault' | 'add' | 'pw'>('vault');
     const [entriesLoaded, setEntriesLoaded] = useState(false);
     const [userEmail, setUserEmail] = useState<string>('');
     const router = useRouter();
@@ -94,9 +94,20 @@ export default function VaultPage() {
                                 </svg>
                                 <span>Add Entry</span>
                             </button>
-                            <br />
-                            <br />
-                            <PasswordChecker />
+                            <button
+                                onClick={() => setActiveTab('pw')}
+                                className={`w-full text-left px-4 py-3 rounded-lg transition-all duration-200 flex items-center space-x-3 ${activeTab === 'pw' ? 'bg-[color:var(--neon)]/20 border border-[color:var(--neon)]/40 neon-text' : 'text-gray-300 hover:bg-gray-800/50 hover:text-white'}`}
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-white-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M15 7a4 4 0 10-2.93 6.81L6 20h3v-3h3v-3h3.07A4.002 4.002 0 0015 7z"
+                                    />
+                                </svg>
+                                <span>Check Password Strength</span>
+                            </button>
                         </div>
                     </nav>
                 </div>
@@ -124,10 +135,18 @@ export default function VaultPage() {
                     <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
                         <div>
                             <h2 className="text-xl lg:text-2xl font-bold">
-                                {activeTab === 'vault' ? 'My Secure Vault' : 'Add New Entry'}
+                                {activeTab === 'vault'
+                                    ? 'My Secure Vault'
+                                    : activeTab === 'add'
+                                        ? 'Add New Entry'
+                                        : 'Password Strength Checker'}
                             </h2>
                             <p className="text-gray-400 text-sm">
-                                {activeTab === 'vault' ? (entriesLoaded ? `${entries.length} entries stored securely` : 'Loading entries...') : 'Create a new secure entry'}
+                                {activeTab === 'vault'
+                                    ? (entriesLoaded ? `${entries.length} entries stored securely` : 'Loading entries...')
+                                    : activeTab === 'add'
+                                        ? 'Create a new secure entry'
+                                        : 'Check the strength of your passwords'}
                             </p>
                         </div>
                         <div className="flex items-center space-x-2 text-sm text-gray-400">
@@ -148,13 +167,19 @@ export default function VaultPage() {
                                     onEntriesLoaded={handleEntriesLoaded}
                                 />
                             </div>
-                        ) : (
+                        ) : activeTab === 'add' ? (
                             <div className="max-w-full lg:max-w-2xl mx-auto">
                                 <div className="bg-[#181c1b] border border-[color:var(--neon)]/30 rounded-2xl p-6 lg:p-8 shadow-xl">
                                     <VaultForm userToken={token} onNewEntry={handleNewEntry} />
                                 </div>
                             </div>
-                        )}
+                        ) : activeTab === 'pw' ? (
+                            <div className="max-w-full lg:max-w-2xl mx-auto">
+                                <div className=" rounded-2xl p-6 lg:p-8 shadow-xl">
+                                    <PasswordChecker />
+                                </div>
+                            </div>
+                        ) : null}
                     </div>
                 </main>
             </div>
