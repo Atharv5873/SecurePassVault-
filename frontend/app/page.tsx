@@ -458,32 +458,35 @@
 
 import { useEffect, useState } from 'react';
 
-const COUNTDOWN_KEY = 'maintenanceCountdownStart';
-const COUNTDOWN_DURATION = 12 * 60 * 60 * 1000; // 12 hours in ms
-
 export default function MaintenancePage() {
-  const [timeLeft, setTimeLeft] = useState<number>(COUNTDOWN_DURATION);
+  const [timeLeft, setTimeLeft] = useState<number>(0);
 
-  useEffect(() => {
-    const now = Date.now();
-    let start = localStorage.getItem(COUNTDOWN_KEY);
+  const getNext2PMIST = (): number => {
+    const nowUTC = new Date();
+    const nowIST = new Date(nowUTC.getTime() + 5.5 * 60 * 60 * 1000);
 
-    if (!start) {
-      localStorage.setItem(COUNTDOWN_KEY, now.toString());
-      start = now.toString();
+    const next2PMIST = new Date(nowIST);
+    next2PMIST.setHours(14, 0, 0, 0); // 2 PM IST
+
+    if (nowIST.getTime() >= next2PMIST.getTime()) {
+      // If past 2PM IST today, set it to 2PM tomorrow
+      next2PMIST.setDate(next2PMIST.getDate() + 1);
     }
 
-    const startTime = parseInt(start);
-    const endTime = startTime + COUNTDOWN_DURATION;
+    // Convert back to UTC timestamp for consistency
+    return next2PMIST.getTime() - 5.5 * 60 * 60 * 1000;
+  };
 
-    const updateTimer = () => {
-      const remaining = Math.max(endTime - Date.now(), 0);
+  useEffect(() => {
+    const updateTimeLeft = () => {
+      const now = Date.now();
+      const targetTime = getNext2PMIST();
+      const remaining = Math.max(targetTime - now, 0);
       setTimeLeft(remaining);
     };
 
-    updateTimer();
-    const interval = setInterval(updateTimer, 1000);
-
+    updateTimeLeft();
+    const interval = setInterval(updateTimeLeft, 1000);
     return () => clearInterval(interval);
   }, []);
 
@@ -500,7 +503,7 @@ export default function MaintenancePage() {
   return (
     <div className="min-h-screen flex flex-col justify-center items-center bg-gray-900 text-white text-center px-4">
       <h1 className="text-4xl font-bold mb-4">🔧 Under Maintenance</h1>
-      <p className="text-lg mb-8">We’ll be back in:</p>
+      <p className="text-lg mb-8">We'll be back by 2 PM IST:</p>
       <div className="text-3xl font-mono bg-black px-6 py-4 rounded-lg shadow-lg border border-gray-700">
         {formatTime(timeLeft)}
       </div>
