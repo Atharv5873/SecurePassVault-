@@ -147,9 +147,10 @@ def srp_challenge(email: str = Query(...)):
         db["srp_sessions"].update_one({"email": email}, {"$set": session_doc}, upsert=True)
 
         return {
-            "salt": user["salt"],
-            "message": "Send client A and M1 to /srp/verify"
-        }
+  "salt": "<base64 salt>",
+  "B": "<hex or base64 server ephemeral public>",
+  "message": "Send A and M1 to /srp/verify"
+}
     except Exception as e:
         raise HTTPException(500, f"SRP challenge setup failed: {str(e)}")
 
