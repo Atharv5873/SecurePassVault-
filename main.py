@@ -3,6 +3,7 @@ from Routers import credentials_router,auth_router,admin_router,utils_router,pro
 from fastapi.middleware.cors import CORSMiddleware
 from apscheduler.schedulers.background import BackgroundScheduler
 import httpx
+from fastapi.responses import HTMLResponse
 
 app = FastAPI(title="SecurePassVault API")
 
@@ -32,6 +33,54 @@ scheduler=BackgroundScheduler()
 scheduler.add_job(ping_site,'interval',minutes=13)
 scheduler.start()
 
-@app.get("/")
+@app.get("/", response_class=HTMLResponse)
 def root():
-    return {"message":"SecurePass Vault is Running"}
+    html_content = """
+    <html>
+        <head>
+            <title>SecurePass Vault</title>
+            <meta http-equiv="refresh" content="5;url=https://securepass-vault.onrender.com/vault" />
+            <style>
+                body {
+                    background-color: #0f172a;
+                    color: #f1f5f9;
+                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    height: 100vh;
+                    flex-direction: column;
+                    text-align: center;
+                }
+                h1 {
+                    font-size: 2.5rem;
+                    margin-bottom: 1rem;
+                    color: #38bdf8;
+                }
+                p {
+                    font-size: 1.2rem;
+                    color: #cbd5e1;
+                }
+                .loader {
+                    margin-top: 20px;
+                    border: 6px solid #1e293b;
+                    border-top: 6px solid #38bdf8;
+                    border-radius: 50%;
+                    width: 50px;
+                    height: 50px;
+                    animation: spin 1s linear infinite;
+                }
+                @keyframes spin {
+                    0% { transform: rotate(0deg); }
+                    100% { transform: rotate(360deg); }
+                }
+            </style>
+        </head>
+        <body>
+            <h1>🔐 SecurePass Vault</h1>
+            <p>Redirecting to your vault in 5 seconds...</p>
+            <div class="loader"></div>
+        </body>
+    </html>
+    """
+    return HTMLResponse(content=html_content, status_code=200)
