@@ -29,7 +29,7 @@ export default function VaultDisplay({ userToken, entries, setEntries, onEntries
     const [decryptedData, setDecryptedData] = useState<Record<string, string>>({});
     const [visible, setVisible] = useState<Set<string>>(new Set());
     const [expandedId, setExpandedId] = useState<string | null>(null);
-    const [isLoading, setIsLoading] = useState(false);
+    const [,setIsLoading] = useState(false);
     const [hasLoaded, setHasLoaded] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [showPasswords, setShowPasswords] = useState(true);
