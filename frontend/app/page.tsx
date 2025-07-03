@@ -380,30 +380,33 @@ export default function Home() {
                   <label className="block text-sm font-medium text-gray-300 mb-2">OTP</label>
                   <input
                     type="text"
+                    placeholder="Enter OTP sent to your email"
                     value={otp}
                     onChange={(e) => setOtp(e.target.value)}
                     required
-                    className="w-full px-4 py-2 bg-gray-800 border border-gray-600 rounded-md text-white"
+                    className="w-full px-4 py-2 bg-black border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-[color:var(--neon)]"
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">Password</label>
                   <input
                     type="password"
+                    placeholder="Set your Password"
                     value={registerPassword}
                     onChange={(e) => setRegisterPassword(e.target.value)}
                     required
-                    className="w-full px-4 py-2 bg-gray-800 border border-gray-600 rounded-md text-white"
+                    className="w-full px-4 py-2 bg-black border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-[color:var(--neon)]"
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">Confirm Password</label>
                   <input
                     type="password"
+                    placeholder="Re-enter your Password"
                     value={registerConfirmPassword}
                     onChange={(e) => setRegisterConfirmPassword(e.target.value)}
                     required
-                    className="w-full px-4 py-2 bg-gray-800 border border-gray-600 rounded-md text-white"
+                    className="w-full px-4 py-2 bg-black border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-[color:var(--neon)]"
                   />
                 </div>
                 <button type="submit" className="px-6 py-3 bg-[color:var(--neon)] text-black font-semibold rounded-md hover:bg-blue-400 transition-all duration-200">
