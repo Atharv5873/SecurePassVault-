@@ -1260,6 +1260,13 @@
       }
     }
   }
+  .hover\:opacity-90 {
+    &:hover {
+      @media (hover: hover) {
+        opacity: 90%;
+      }
+    }
+  }
   .hover\:shadow-\[0_0_40px_10px_var\(--neon\)\] {
     &:hover {
       @media (hover: hover) {
@@ -1301,6 +1308,11 @@
       box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
     }
   }
+  .focus\:ring-\[color\:var\(--neon\)\] {
+    &:focus {
+      --tw-ring-color: var(--neon);
+    }
+  }
   .focus\:ring-\[color\:var\(--neon\)\]\/30 {
     &:focus {
       --tw-ring-color: var(--neon);
@@ -1321,6 +1333,11 @@
     &:focus {
       --tw-outline-style: none;
       outline-style: none;
+    }
+  }
+  .disabled\:opacity-50 {
+    &:disabled {
+      opacity: 50%;
     }
   }
   .sm\:top-4 {

@@ -16,7 +16,10 @@ export default function Home() {
   const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
-  const [registerEmail, setRegisterEmail] = useState('');
+  const[email, setEmail] = useState('');
+  const [otp, setOtp] = useState('');
+  const [isSending, setIsSending] = useState(false);
+  const [message, setMessage] = useState('');
   const [registerPassword, setRegisterPassword] = useState('');
   const [registerConfirmPassword, setRegisterConfirmPassword] = useState('');
   const router = useRouter();
@@ -121,11 +124,12 @@ export default function Home() {
       const salt = generateSalt();
       const encodedSalt = encodeSalt(salt);
 
-      const res = await fetch('/auth/register', {
+      const res = await fetch('/auth/verify-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          username: registerEmail,
+          email: email,
+          otp: otp,
           password: registerPassword,
           salt: encodedSalt,
         }),
@@ -323,12 +327,60 @@ export default function Home() {
                 <button onClick={() => setShowRegisterModal(false)} className="text-gray-400 hover:text-white text-2xl">&times;</button>
               </div>
               <form onSubmit={handleRegister} className="flex flex-col space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Email</label>
+                <div className="space-y-4">
                   <input
                     type="email"
-                    value={registerEmail}
-                    onChange={(e) => setRegisterEmail(e.target.value)}
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="Enter your email"
+                    className="w-full px-4 py-2 border border-gray-600 bg-black text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-[color:var(--neon)]"
+                  />
+
+                  <button
+                    onClick={async () => {
+                      if (!email || !email.includes('@') || !email.includes('.')) {
+                        setMessage('Please enter a valid email address.');
+                        return;
+                      }
+
+                      setIsSending(true);
+                      setMessage('');
+
+                      try {
+                        const res = await fetch(`/auth/register`, {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ email }),
+                        });
+
+                        const data = await res.json();
+
+                        if (res.ok) {
+                          setMessage('OTP sent successfully!');
+                        } else {
+                          setMessage(data.detail || data.error || 'Failed to send OTP.');
+                        }
+                      } catch (err) {
+                        setMessage('Something went wrong.');
+                      } finally {
+                        setIsSending(false);
+                      }
+                    }}
+                    className="w-full py-2 px-4 bg-[color:var(--neon)] text-black font-bold rounded-lg hover:opacity-90 disabled:opacity-50"
+                    disabled={isSending}
+                  >
+                    {isSending ? 'Sending...' : 'Send OTP'}
+                  </button>
+
+                  {message && <p className="text-sm text-gray-300">{message}</p>}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">OTP</label>
+                  <input
+                    type="text"
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value)}
                     required
                     className="w-full px-4 py-2 bg-gray-800 border border-gray-600 rounded-md text-white"
                   />
