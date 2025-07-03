@@ -49,3 +49,4 @@ def delete_cred(cred_id: str, user_id: str = Depends(get_current_user)):
         "username": result["username"],
         "status": "Credential deleted successfully"
     }
+

@@ -87,3 +87,35 @@ def view_product_keys(user_id):
         "description":(c["description"])
     } for c in products]
 
+def reveal_license_key(product_id,user_id):
+    product=products_collection.find_one({
+        "_id":ObjectId(product_id),
+        "user_id":ObjectId(user_id),
+    })
+    if not product:
+        return None
+    key=get_user_key(user_id)
+    decrypted_license_key=decrypt_password(product["license_key"],key)
+    return {
+        "product_name":product["product_name"],
+        "license_key":decrypted_license_key,
+        "description":product["description"],
+    }
+    
+def delete_product_key(product_id, user_id):
+    product = products_collection.find_one({
+        "_id": ObjectId(product_id),
+        "user_id": ObjectId(user_id)
+    })
+    if not product:
+        return None
+    result = products_collection.delete_one({
+        "_id": ObjectId(product_id),
+        "user_id": ObjectId(user_id)
+    })
+    if result.deleted_count > 0:
+        return {
+            "product_name": product["product_name"]
+        }
+    return False
+
