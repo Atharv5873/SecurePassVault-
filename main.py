@@ -1,11 +1,23 @@
 from fastapi import FastAPI
-from Routers import credentials_router,auth_router,admin_router,utils_router,products_router
+from Routers import credentials_router, auth_router, admin_router, utils_router, products_router
 from fastapi.middleware.cors import CORSMiddleware
 from apscheduler.schedulers.background import BackgroundScheduler
 import httpx
+from db_config import db
 from fastapi.responses import HTMLResponse
+from contextlib import asynccontextmanager
 
-app = FastAPI(title="SecurePassVault API")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup code: create TTL index on pending_otps.expiry
+    print("Creating TTL index on pending_otps.expiry...")
+    db["pending_otps"].create_index("expiry", expireAfterSeconds=0)
+    print("TTL index created.")
+    yield
+    # Shutdown code if needed
+    print("Shutting down...")
+
+app = FastAPI(title="SecurePassVault API", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -23,14 +35,14 @@ app.include_router(products_router.router)
 
 def ping_site():
     try:
-        url="https://securepass-vault.onrender.com/"
-        response=httpx.get(url,timeout=10)
+        url = "https://securepass-vault.onrender.com/"
+        response = httpx.get(url, timeout=10)
         print(f"Pinged {url} | Status : {response.status_code}")
     except Exception as e:
         print(f"Ping error: {e}")
-        
-scheduler=BackgroundScheduler()
-scheduler.add_job(ping_site,'interval',minutes=13)
+
+scheduler = BackgroundScheduler()
+scheduler.add_job(ping_site, 'interval', minutes=13)
 scheduler.start()
 
 @app.get("/", response_class=HTMLResponse)

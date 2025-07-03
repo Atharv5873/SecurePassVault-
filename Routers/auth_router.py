@@ -1,5 +1,5 @@
 from fastapi import APIRouter,HTTPException, Depends, Query
-from models import VerifyRequest
+from models import VerifyRequest, EmailRequest
 from utils.otp import *
 from utils.email_utils import *
 from fastapi.security import OAuth2PasswordRequestForm
@@ -7,6 +7,8 @@ from auth import create_access_token,create_user,authenticate_user,get_current_u
 from starlette import status
 from db_config import db
 from bson import ObjectId
+import time
+from pymongo import ReturnDocument
 
 pending_otps = {}  # email -> {"otp": ..., "expiry": ...}
 
@@ -15,22 +17,43 @@ users_collection=db["users"]
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
 @router.post("/register")
-def register(email: str):
+def register(data: EmailRequest):
+    email = data.email.strip().lower()
     if users_collection.find_one({"username": email}):
         raise HTTPException(400, "Email already registered")
+
     otp = generate_otp()
-    pending_otps[email] = {"otp": otp, "expiry": time.time() + 300}
+    expiry = time.time() + 300  # 5 minutes from now
+
+    # Upsert OTP doc
+    db["pending_otps"].find_one_and_update(
+        {"email": email},
+        {"$set": {"otp": otp, "expiry": expiry}},
+        upsert=True,
+        return_document=ReturnDocument.AFTER
+    )
+
     send_otp_email(email, otp)
     return {"message": "OTP sent"}
 
+
 @router.post("/verify-otp")
 def verify_otp(data: VerifyRequest):
-    record = pending_otps.get(data.email)
-    if not record or record["otp"] != data.otp or is_otp_expired(record["expiry"]):
-        raise HTTPException(400, "Invalid or expired OTP")
-    create_user(data.email, data.password, data.salt)
-    del pending_otps[data.email]
+    email = data.email.strip().lower()
+    record = db["pending_otps"].find_one({"email": email})
+
+    if not record:
+        raise HTTPException(400, "No OTP request found for this email")
+    if record["otp"] != data.otp:
+        raise HTTPException(400, "Invalid OTP")
+    if time.time() > record["expiry"]:
+        db["pending_otps"].delete_one({"email": email})
+        raise HTTPException(400, "OTP expired")
+
+    create_user(email, data.password, data.salt)
+    db["pending_otps"].delete_one({"email": email})
     return {"message": "Registration successful"}
+
     
 @router.post("/token")
 def user_login(form_data: OAuth2PasswordRequestForm = Depends()):
