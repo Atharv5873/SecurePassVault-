@@ -4,7 +4,7 @@ import toast from 'react-hot-toast';
 import { encryptData } from '@/lib/crypto/encryptdata';
 import { useCrypto } from '@/contexts/cryptocontext';
 import { LicenseEntry } from '@/app/types/vault';
-import { Lock, User, Globe, Eye, EyeOff } from 'lucide-react';
+import { Lock, User, Globe, Eye, EyeOff, LetterText } from 'lucide-react';
 
 type LicenseProps = {
     userToken: string;
@@ -79,7 +79,7 @@ export default function License({ userToken, onNewEntry }: LicenseProps) {
                 {/* Product Name Field */}
                 <div className="space-y-2">
                     <label className="block text-sm font-medium text-gray-300 flex items-center gap-2">
-                        <User size={16} />
+                        <Globe size={16} />
                         Product Name
                     </label>
                     <div className="relative">
@@ -90,7 +90,7 @@ export default function License({ userToken, onNewEntry }: LicenseProps) {
                             onChange={(e) => setForm({ ...form, productName: e.target.value })}
                             required
                         />
-                        <User size={18} className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                        <Globe size={18} className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
                     </div>
                 </div>
 
@@ -123,7 +123,7 @@ export default function License({ userToken, onNewEntry }: LicenseProps) {
                 {/* Description Field */}
                 <div className="space-y-2">
                     <label className="block text-sm font-medium text-gray-300 flex items-center gap-2">
-                        <Globe size={16} />
+                        <LetterText size={16} />
                         Description
                     </label>
                     <div className="relative">
@@ -133,7 +133,7 @@ export default function License({ userToken, onNewEntry }: LicenseProps) {
                             value={form.description}
                             onChange={(e) => setForm({ ...form, description: e.target.value })}
                         />
-                        <Globe size={18} className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                        <LetterText size={18} className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
                     </div>
                 </div>
 
