@@ -471,7 +471,11 @@ function getTimeRemaining(targetTime: Date) {
 }
 
 export default function MaintenancePage() {
-  const [timeLeft, setTimeLeft] = useState({ hours: 0, minutes: 0, seconds: 0 });
+  const [timeLeft, setTimeLeft] = useState({
+  hours: '00',
+  minutes: '00',
+  seconds: '00',
+});
 
   useEffect(() => {
     // Calculate today's 2 PM IST in user's local time
