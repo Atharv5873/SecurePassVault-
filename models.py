@@ -18,3 +18,10 @@ class ProductKeyIn(BaseModel):
     product_name:str
     license_key:str
     description:str | None  = None
+    
+
+class VerifyRequest(BaseModel):
+    email: str
+    otp: str
+    password: str
+    salt: str

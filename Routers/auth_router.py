@@ -1,18 +1,36 @@
 from fastapi import APIRouter,HTTPException, Depends, Query
-from models import UserRegister
+from models import VerifyRequest
+from utils.otp import *
+from utils.email_utils import *
 from fastapi.security import OAuth2PasswordRequestForm
 from auth import create_access_token,create_user,authenticate_user,get_current_user
 from starlette import status
 from db_config import db
 from bson import ObjectId
 
+pending_otps = {}  # email -> {"otp": ..., "expiry": ...}
+
 users_collection=db["users"]
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
-@router.post("/register",status_code=status.HTTP_201_CREATED)
-def user_register(user:UserRegister):
-    create_user(user.username,user.password,user.salt)
+@router.post("/register")
+def register(email: str):
+    if users_collection.find_one({"username": email}):
+        raise HTTPException(400, "Email already registered")
+    otp = generate_otp()
+    pending_otps[email] = {"otp": otp, "expiry": time.time() + 300}
+    send_otp_email(email, otp)
+    return {"message": "OTP sent"}
+
+@router.post("/verify-otp")
+def verify_otp(data: VerifyRequest):
+    record = pending_otps.get(data.email)
+    if not record or record["otp"] != data.otp or is_otp_expired(record["expiry"]):
+        raise HTTPException(400, "Invalid or expired OTP")
+    create_user(data.email, data.password, data.salt)
+    del pending_otps[data.email]
+    return {"message": "Registration successful"}
     
 @router.post("/token")
 def user_login(form_data: OAuth2PasswordRequestForm = Depends()):
