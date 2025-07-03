@@ -24,12 +24,16 @@ type VaultDisplayProps = {
     onEntriesLoaded?: (loadedEntries: (VaultEntry | LicenseEntry)[]) => void;
 };
 
-export default function VaultDisplay({ userToken, entries, setEntries, onEntriesLoaded }: VaultDisplayProps) {
+export default function VaultDisplay({
+    userToken,
+    entries,
+    setEntries,
+    onEntriesLoaded,
+}: VaultDisplayProps) {
     const { derivedKey } = useCrypto();
     const [decryptedData, setDecryptedData] = useState<Record<string, string>>({});
     const [visible, setVisible] = useState<Set<string>>(new Set());
     const [expandedId, setExpandedId] = useState<string | null>(null);
-    const [,setIsLoading] = useState(false);
     const [hasLoaded, setHasLoaded] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [showPasswords, setShowPasswords] = useState(true);
@@ -45,47 +49,42 @@ export default function VaultDisplay({ userToken, entries, setEntries, onEntries
     }, [setEntries, onEntriesLoaded]);
 
     useEffect(() => {
-        if (userToken && !hasLoaded && !hasInitializedRef.current) {
-            hasInitializedRef.current = true;
+        if (!userToken || hasLoaded || hasInitializedRef.current) return;
 
-            const fetchEntries = async () => {
-                try {
-                    setIsLoading(true);
+        hasInitializedRef.current = true;
 
-                    const [resCredentials, resProducts] = await Promise.all([
-                        fetch(`/credentials`, {
-                            headers: { Authorization: `Bearer ${userToken}` },
-                        }),
-                        fetch(`https://securepassvault-1.onrender.com/products/`, {
-                            headers: { Authorization: `Bearer ${userToken}` },
-                        }),
-                    ]);
+        const fetchEntries = async () => {
+            try {
+                const [resCredentials, resProducts] = await Promise.all([
+                    fetch(`/credentials`, {
+                        headers: { Authorization: `Bearer ${userToken}` },
+                    }),
+                    fetch(`https://securepassvault-1.onrender.com/products/`, {
+                        headers: { Authorization: `Bearer ${userToken}` },
+                    }),
+                ]);
 
-                    if (!resCredentials.ok || !resProducts.ok) {
-                        const errCredentials = await resCredentials.json().catch(() => ({}));
-                        const errProducts = await resProducts.json().catch(() => ({}));
-                        throw new Error(errCredentials?.detail || errProducts?.detail || 'Failed to fetch entries');
-                    }
-
-                    const dataCredentials = await resCredentials.json();
-                    const dataProducts = await resProducts.json();
-                    const combined = [...dataCredentials, ...dataProducts];
-
-                    setEntries(combined); // ✅ KEY FIX HERE
-                    setHasLoaded(true);
-                    onEntriesLoadedRef.current?.(combined);
-                } catch (err) {
-                    console.error('[Vault Fetch Error]', err);
-                    toast.error('Failed to load entries');
-                } finally {
-                    setIsLoading(false);
+                if (!resCredentials.ok || !resProducts.ok) {
+                    const errCredentials = await resCredentials.json().catch(() => ({}));
+                    const errProducts = await resProducts.json().catch(() => ({}));
+                    throw new Error(errCredentials?.detail || errProducts?.detail || 'Failed to fetch entries');
                 }
-            };
 
-            fetchEntries();
-        }
-    }, [userToken, hasLoaded, setEntries]);
-      
+                const dataCredentials = await resCredentials.json();
+                const dataProducts = await resProducts.json();
+
+                const combined: (VaultEntry | LicenseEntry)[] = [...dataCredentials, ...dataProducts];
+                setEntriesRef.current(combined);
+                setHasLoaded(true);
+                onEntriesLoadedRef.current?.(combined);
+            } catch (err) {
+                console.error('[Vault Fetch Error]', err);
+                toast.error('Failed to load entries');
+            }
+        };
+
+        fetchEntries();
+    }, [userToken, hasLoaded]);
 
     const reveal = async (id: string, endpoint: string) => {
         if (!derivedKey) {
@@ -99,24 +98,23 @@ export default function VaultDisplay({ userToken, entries, setEntries, onEntries
             });
 
             const json = await res.json();
-            const encrypted = typeof json === 'string'
-                ? json
-                : json.password || json.license_key || json.key || json.license;
+            const encrypted: string | undefined =
+                typeof json === 'string'
+                    ? json
+                    : json.password || json.license_key || json.key || json.license;
 
             if (!encrypted) throw new Error('No encrypted field in response.');
 
-
             const decrypted = await decryptData(derivedKey, encrypted);
-            setDecryptedData(prev => ({ ...prev, [id]: decrypted }));
+            setDecryptedData((prev) => ({ ...prev, [id]: decrypted }));
         } catch (err) {
             console.error('[Reveal Error]', err);
             toast.error('Reveal failed.');
         }
     };
-    
 
     const toggleVisibility = (id: string) => {
-        setVisible(prev => {
+        setVisible((prev) => {
             const newSet = new Set(prev);
             newSet.has(id) ? newSet.delete(id) : newSet.add(id);
             return newSet;
@@ -137,13 +135,17 @@ export default function VaultDisplay({ userToken, entries, setEntries, onEntries
         if (!confirm('Are you sure?')) return;
 
         try {
-            const endpoint = isPassword ? `/credentials/delete/${id}` : `https://securepassvault-1.onrender.com/products/delete/${id}`;
+            const endpoint = isPassword
+                ? `/credentials/delete/${id}`
+                : `https://securepassvault-1.onrender.com/products/delete/${id}`;
+
             const res = await fetch(endpoint, {
                 method: 'DELETE',
                 headers: { Authorization: `Bearer ${userToken}` },
             });
+
             if (!res.ok) throw new Error(await res.text());
-            setEntries(prev => prev.filter(entry => entry.id !== id));
+            setEntries((prev) => prev.filter((entry) => entry.id !== id));
             toast.success('Deleted!');
         } catch (err) {
             console.error('[Delete Error]', err);
@@ -153,16 +155,18 @@ export default function VaultDisplay({ userToken, entries, setEntries, onEntries
 
     const filteredPasswords = entries
         .filter((e): e is VaultEntry => 'site' in e && 'username' in e)
-        .filter(e => `${e.site} ${e.username}`.toLowerCase().includes(searchTerm.toLowerCase()))
+        .filter((e) =>
+            `${e.site} ${e.username}`.toLowerCase().includes(searchTerm.toLowerCase())
+        )
         .sort((a, b) => a.site.localeCompare(b.site));
 
     const filteredLicenses = entries
-        .filter((e): e is LicenseEntry => {
-            return typeof (e as any).product_name === 'string' && typeof (e as any).description === 'string';
-        })
-        .filter(e => `${e.product_name} ${e.description}`.toLowerCase().includes(searchTerm.toLowerCase()))
+        .filter((e): e is LicenseEntry => 'product_name' in e && 'description' in e)
+        .filter((e) =>
+            `${e.product_name} ${e.description}`.toLowerCase().includes(searchTerm.toLowerCase())
+        )
         .sort((a, b) => a.product_name.localeCompare(b.product_name));
-    
+
     return (
         <div className="mt-6 max-w-2xl mx-auto w-full">
             <input
@@ -170,21 +174,21 @@ export default function VaultDisplay({ userToken, entries, setEntries, onEntries
                 placeholder="Search entries..."
                 className="w-full mb-6 px-4 py-3 rounded-xl bg-white/5 border border-[color:var(--neon)]/30 text-white placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[color:var(--neon)]/50"
                 value={searchTerm}
-                onChange={e => setSearchTerm(e.target.value)}
+                onChange={(e) => setSearchTerm(e.target.value)}
             />
 
             {/* Password Section */}
             <div className="mb-6">
                 <button
                     className="flex items-center gap-2 text-lg font-semibold text-white mb-2"
-                    onClick={() => setShowPasswords(p => !p)}
+                    onClick={() => setShowPasswords((p) => !p)}
                 >
                     {showPasswords ? <ChevronDown /> : <ChevronRight />}
                     Passwords
                 </button>
                 {showPasswords && filteredPasswords.length > 0 ? (
                     <ul className="space-y-4">
-                        {filteredPasswords.map(entry => {
+                        {filteredPasswords.map((entry) => {
                             const expanded = expandedId === entry.id;
                             const visibleVal = visible.has(entry.id);
                             return (
@@ -235,14 +239,14 @@ export default function VaultDisplay({ userToken, entries, setEntries, onEntries
             <div>
                 <button
                     className="flex items-center gap-2 text-lg font-semibold text-white mb-2"
-                    onClick={() => setShowKeys(p => !p)}
+                    onClick={() => setShowKeys((p) => !p)}
                 >
                     {showKeys ? <ChevronDown /> : <ChevronRight />}
                     Product Keys
                 </button>
                 {showKeys && filteredLicenses.length > 0 ? (
                     <ul className="space-y-4">
-                        {filteredLicenses.map(entry => {
+                        {filteredLicenses.map((entry) => {
                             const expanded = expandedId === entry.id;
                             const visibleVal = visible.has(entry.id);
                             return (
@@ -259,7 +263,6 @@ export default function VaultDisplay({ userToken, entries, setEntries, onEntries
                                         <div>
                                             <p className="font-medium neon-text">{entry.product_name}</p>
                                             <p className="text-gray-400 text-sm">{entry.description || 'No description provided.'}</p>
-
                                         </div>
                                         {expanded ? <ChevronUp /> : <ChevronDown />}
                                     </div>
