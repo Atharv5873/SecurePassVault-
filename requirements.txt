@@ -33,6 +33,8 @@ rsa==4.9.1
 setuptools==80.9.0
 six==1.17.0
 sniffio==1.3.1
+srp==1.0.22
+srptools==1.0.1
 starlette==0.46.2
 typing-inspection==0.4.1
 typing_extensions==4.14.0
