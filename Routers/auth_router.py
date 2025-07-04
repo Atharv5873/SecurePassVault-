@@ -6,24 +6,26 @@ from auth import create_access_token
 from starlette import status
 from db_config import db
 from pymongo import ReturnDocument
-import srp, base64, time, traceback
+import srp
+import base64
+import time
+import traceback
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 users_collection = db["users"]
 pending = db["pending_otps"]
 srp_sessions = db["srp_sessions"]
 
-# In-memory storage for active SRP sessions
-# In production, use Redis or similar
+# In-memory storage for active SRP sessions (use Redis in production)
 active_sessions = {}
 
-# Cleanup old sessions (call this periodically)
+# --- Helper: Cleanup expired SRP sessions ---
 def cleanup_old_sessions():
     current_time = time.time()
-    to_remove = []
-    for email, (session_data, timestamp) in active_sessions.items():
-        if current_time - timestamp > 300:  # 5 minutes
-            to_remove.append(email)
+    to_remove = [
+        email for email, (_, timestamp) in active_sessions.items()
+        if current_time - timestamp > 300
+    ]
     for email in to_remove:
         del active_sessions[email]
 
@@ -31,6 +33,7 @@ def cleanup_old_sessions():
 @router.post("/register")
 def register(data: EmailRequest):
     email = data.email.strip().lower()
+
     if users_collection.find_one({"username": email}):
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "Email already registered")
 
@@ -43,10 +46,11 @@ def register(data: EmailRequest):
         upsert=True,
         return_document=ReturnDocument.AFTER
     )
+
     send_otp_email(email, otp)
     return {"message": "OTP sent"}
 
-# --- Step 2: Verify OTP and register SRP verifier ---
+# --- Step 2: Verify OTP and store SRP verifier ---
 @router.post("/verify-otp")
 def verify_otp(data: VerifyRequest):
     email = data.email.strip().lower()
@@ -79,11 +83,12 @@ def verify_otp(data: VerifyRequest):
     pending.delete_one({"email": email})
     return {"message": "Registration successful"}
 
-# --- Step 3: SRP Challenge ---
+# --- Step 3: SRP Challenge (Login Part 1) ---
 @router.get("/srp/challenge")
 def srp_challenge(email: str = Query(...)):
     email = email.strip().lower()
     user = users_collection.find_one({"username": email})
+
     if not user:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "User not found")
 
@@ -116,7 +121,7 @@ def srp_challenge(email: str = Query(...)):
         traceback.print_exc()
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, f"SRP challenge error: {str(e)}")
 
-# --- Step 4: SRP Verify ---
+# --- Step 4: SRP Verify (Login Part 2) ---
 @router.post("/srp/verify")
 def srp_verify(data: SRPVerifyRequest):
     email = data.email.strip().lower()
@@ -138,20 +143,11 @@ def srp_verify(data: SRPVerifyRequest):
         )
 
     try:
-        print("=== SRP VERIFY DEBUG ===")
-        print(f"Email: {email}")
-
         client_A_hex = data.clientEphemeralPublic
         client_M1_hex = data.clientSessionProof
 
-        print(f"Client ephemeral A (hex): {client_A_hex}")
-        print(f"Client proof M1 (hex): {client_M1_hex}")
-
         A_bytes = bytes.fromhex(client_A_hex)
         M1_bytes = bytes.fromhex(client_M1_hex)
-
-        print(f"Client A (bytes): {A_bytes.hex()}")
-        print(f"Client M1 (bytes): {M1_bytes.hex()}")
 
         verifier = session_data['verifier_obj']
         verifier.set_A(A_bytes)
@@ -159,19 +155,16 @@ def srp_verify(data: SRPVerifyRequest):
         HAMK = verifier.verify_session(M1_bytes)
 
         if HAMK is None:
-            print("Client proof invalid: verifier.verify_session returned None")
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Authentication failed"
             )
 
-        print(f"Server session proof HAMK: {HAMK.hex()}")
-
         user = users_collection.find_one({"username": email})
         token = create_access_token({"user_id": str(user["_id"])})
 
         del active_sessions[email]
-        srp_sessions.delete_one({"email": email])
+        srp_sessions.delete_one({"email": email})
 
         return {
             "serverProof": HAMK.hex(),
@@ -179,9 +172,6 @@ def srp_verify(data: SRPVerifyRequest):
         }
 
     except Exception as e:
-        print("=== SRP VERIFY EXCEPTION ===")
-        print(f"Exception type: {type(e)}")
-        print(f"Exception message: {str(e)}")
         traceback.print_exc()
         if email in active_sessions:
             del active_sessions[email]
@@ -190,7 +180,7 @@ def srp_verify(data: SRPVerifyRequest):
             detail=f"SRP verification failed: {str(e)}"
         )
 
-# --- Alternative endpoints for v2 ---
+# --- Aliases for v2 compatibility ---
 @router.get("/srp/challenge-v2")
 def srp_challenge_v2(email: str = Query(...)):
     return srp_challenge(email)
