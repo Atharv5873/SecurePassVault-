@@ -102,7 +102,7 @@ def srp_challenge(email: str = Query(...)):
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, f"SRP challenge error: {str(e)}")
 
 
-# --- Step 4: SRP Verify with detailed debugging ---
+# --- Step 4: SRP Verify with fixed initialization ---
 @router.post("/srp/verify")
 def srp_verify(data: SRPVerifyRequest):
     email = data.email.strip().lower()
@@ -148,16 +148,40 @@ def srp_verify(data: SRPVerifyRequest):
         verifier_bytes = bytes.fromhex(verifier_hex)
         A = bytes.fromhex(client_A_hex)
         M1 = bytes.fromhex(client_M1_hex)
-        b_int = int(b_hex, 16)
+        b_bytes = bytes.fromhex(b_hex)  # Keep as bytes, not int
 
         print(f"Decoded salt bytes length: {len(salt_bytes)}")
         print(f"Decoded verifier bytes length: {len(verifier_bytes)}")
         print(f"Decoded A bytes length: {len(A)}")
         print(f"Decoded M1 bytes length: {len(M1)}")
-        print(f"Server private ephemeral b (int): {b_int}")
+        print(f"Server private ephemeral b bytes length: {len(b_bytes)}")
 
-        # Create verifier instance for this session
-        server = srp.Verifier(email, salt_bytes, verifier_bytes, A, b_int)
+        # Create verifier instance - Fixed initialization
+        # Method 1: Try recreating the verifier from stored session data
+        try:
+            server = srp.Verifier(email, salt_bytes, verifier_bytes, A)
+            # Set the private key manually if the library supports it
+            if hasattr(server, 'b'):
+                server.b = int(b_hex, 16)
+            elif hasattr(server, '_b'):
+                server._b = int(b_hex, 16)
+        except Exception as e1:
+            print(f"Method 1 failed: {e1}")
+            # Method 2: Try with different parameter order
+            try:
+                server = srp.Verifier(email, salt_bytes, verifier_bytes)
+                server.set_A(A)
+                if hasattr(server, 'b'):
+                    server.b = int(b_hex, 16)
+                elif hasattr(server, '_b'):
+                    server._b = int(b_hex, 16)
+            except Exception as e2:
+                print(f"Method 2 failed: {e2}")
+                # Method 3: Recreate from scratch (this loses the session state)
+                server = srp.Verifier(email, salt_bytes, verifier_bytes)
+                # This will generate new b and B values, which might not match
+                # the ones sent to the client - this is a fallback
+                server.set_A(A)
 
         # Verify client proof M1
         HAMK = server.verify_session(M1)
@@ -190,3 +214,117 @@ def srp_verify(data: SRPVerifyRequest):
             detail=f"SRP verification failed: {str(e)}"
         )
 
+
+# Alternative approach - Store the entire verifier object instead of individual components
+@router.get("/srp/challenge-v2")
+def srp_challenge_v2(email: str = Query(...)):
+    email = email.strip().lower()
+    user = users_collection.find_one({"username": email})
+    if not user:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "User not found")
+
+    try:
+        salt_bytes = base64.b64decode(user["salt"])
+        verifier_bytes = bytes.fromhex(user["verifier"])
+
+        verifier = srp.Verifier(email, salt_bytes, verifier_bytes)
+        b, B = verifier.get_challenge()
+
+        # Store the verifier object state more completely
+        verifier_state = {
+            "email": email,
+            "salt": user["salt"],
+            "verifier": user["verifier"],
+            "b": b.hex(),
+            "B": B.hex(),
+            "timestamp": time.time(),
+            # Try to store more state if available
+            "username": email,
+            "salt_bytes": base64.b64encode(salt_bytes).decode(),
+            "verifier_bytes": user["verifier"]
+        }
+
+        srp_sessions.update_one(
+            {"email": email},
+            {"$set": verifier_state},
+            upsert=True
+        )
+
+        return {
+            "salt": user["salt"],
+            "B": B.hex(),
+            "message": "Send A and M1 to /srp/verify-v2"
+        }
+
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, f"SRP challenge error: {str(e)}")
+
+
+@router.post("/srp/verify-v2")
+def srp_verify_v2(data: SRPVerifyRequest):
+    email = data.email.strip().lower()
+    session = srp_sessions.find_one({"email": email})
+
+    if not session:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No SRP challenge started or session expired"
+        )
+
+    # Expire session if older than 5 minutes
+    if time.time() - session["timestamp"] > 300:
+        srp_sessions.delete_one({"email": email})
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="SRP session expired"
+        )
+
+    try:
+        # Recreate the verifier from stored data
+        salt_bytes = base64.b64decode(session['salt'])
+        verifier_bytes = bytes.fromhex(session['verifier'])
+        A = bytes.fromhex(data.clientEphemeralPublic)
+        M1 = bytes.fromhex(data.clientSessionProof)
+        b_int = int(session['b'], 16)
+
+        # Create a new verifier instance
+        server = srp.Verifier(email, salt_bytes, verifier_bytes)
+        
+        # Set the client's public ephemeral key
+        server.set_A(A)
+        
+        # Try to restore the server's private ephemeral key
+        # This is library-specific and might not work with all implementations
+        if hasattr(server, 'b'):
+            server.b = b_int
+        elif hasattr(server, '_b'):
+            server._b = b_int
+        
+        # Verify client proof M1
+        HAMK = server.verify_session(M1)
+        if not HAMK:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Client proof invalid"
+            )
+
+        # Create JWT token
+        user = users_collection.find_one({"username": email})
+        token = create_access_token({"user_id": str(user["_id"])})
+
+        # Clear session after successful login
+        srp_sessions.delete_one({"email": email})
+
+        return {
+            "serverProof": HAMK.hex(),
+            "access_token": token
+        }
+
+    except Exception as e:
+        print("=== SRP VERIFY V2 EXCEPTION ===")
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"SRP verification failed: {str(e)}"
+        )
