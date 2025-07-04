@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 from strength_test import *
+import secrets
 
 router = APIRouter(
     prefix="/utils",
@@ -24,3 +25,12 @@ def password_strength(password: str):
         },
         "verdict":get_verdict(entropy_bits)
     }
+    
+@router.get("/generate-strong-password")
+def generate_strong_password():
+    length = 64 
+    charset = string.ascii_letters + string.digits + string.punctuation
+    charset = charset.replace('"', '').replace("'", '').replace('\\', '').replace('`', '')
+
+    password = ''.join(secrets.choice(charset) for _ in range(length))
+    return {"password": password}
