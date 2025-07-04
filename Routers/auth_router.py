@@ -149,7 +149,8 @@ def srp_verify(data: SRPVerifyRequest):
         M1 = bytes.fromhex(client_M1_hex)
 
         # Create verifier with client's A - this is the key fix
-        server = srp.Verifier(email, salt_bytes, verifier_bytes, A)
+        server = srp.Verifier(email, salt_bytes, verifier_bytes, A, bytes.fromhex(B_hex))
+
         
         # Verify client proof M1
         HAMK = server.verify_session(M1)
