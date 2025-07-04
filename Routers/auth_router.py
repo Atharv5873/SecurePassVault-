@@ -149,8 +149,14 @@ def srp_verify(data: SRPVerifyRequest):
         A_bytes = bytes.fromhex(client_A_hex)
         M1_bytes = bytes.fromhex(client_M1_hex)
 
-        verifier = session_data['verifier_obj']
-        verifier.set_A(A_bytes)
+        # Recreate verifier object with A included
+        verifier = srp.Verifier(
+            username=email,
+            salt=session_data['salt'],
+            verifier=session_data['verifier'],
+            A=A_bytes
+        )
+        _, _ = verifier.get_challenge()  # Ignored, required to set up internal state
 
         HAMK = verifier.verify_session(M1_bytes)
 
