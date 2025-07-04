@@ -25,6 +25,7 @@ class VerifyRequest(BaseModel):
     otp: str
     password: str
     salt: str
+    pepper: str
     
 class EmailRequest(BaseModel):
     email: str

@@ -49,10 +49,23 @@ def verify_otp(data: VerifyRequest):
     if time.time() > record["expiry"]:
         db["pending_otps"].delete_one({"email": email})
         raise HTTPException(400, "OTP expired")
-
+    
+    db["black"].find_one_and_update(
+        {"email": email},
+        {"$set": {"pepper": data.pepper}},
+        upsert=True
+    )
     create_user(email, data.password, data.salt)
     db["pending_otps"].delete_one({"email": email})
     return {"message": "Registration successful"}
+
+@router.get("/pepper")
+def get_pepper(email: str = Query(...)):
+    email = email.strip().lower()
+    record = db["black"].find_one({"email": email})
+    if not record:
+        raise HTTPException(404, "Pepper not found for this email")
+    return {"pepper": record["pepper"]}
 
     
 @router.post("/token")
