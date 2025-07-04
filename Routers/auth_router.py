@@ -84,7 +84,7 @@ def srp_challenge(email: str = Query(...)):
             {"$set": {
                 "salt": user["salt"],
                 "verifier": user["verifier"],
-                "b": b.hex(),  # convert bytes to hex string correctly
+                "b": b.hex(),
                 "B": B.hex(),
                 "timestamp": time.time()
             }},
@@ -98,13 +98,11 @@ def srp_challenge(email: str = Query(...)):
         }
 
     except Exception as e:
-        import traceback
         traceback.print_exc()
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, f"SRP challenge error: {str(e)}")
 
 
-
-# --- Step 4: SRP Verify ---
+# --- Step 4: SRP Verify with detailed debugging ---
 @router.post("/srp/verify")
 def srp_verify(data: SRPVerifyRequest):
     email = data.email.strip().lower()
@@ -127,35 +125,55 @@ def srp_verify(data: SRPVerifyRequest):
     try:
         print("=== SRP VERIFY DEBUG ===")
         print(f"Email: {email}")
-        print(f"Salt (base64): {session['salt']}")
-        print(f"Verifier (hex): {session['verifier']}")
-        print(f"B (hex): {session['B']}")
-        print(f"A (clientEphemeralPublic): {data.clientEphemeralPublic}")
-        print(f"M1 (clientSessionProof): {data.clientSessionProof}")
+
+        # Raw stored values
+        salt_b64 = session['salt']
+        verifier_hex = session['verifier']
+        b_hex = session['b']
+        B_hex = session['B']
+        client_A_hex = data.clientEphemeralPublic
+        client_M1_hex = data.clientSessionProof
+
+        print(f"Salt (base64): {salt_b64} (len: {len(salt_b64)})")
+        print(f"Verifier (hex): {verifier_hex} (len: {len(verifier_hex)})")
+        print(f"B (hex): {B_hex} (len: {len(B_hex)})")
+        print(f"Server private ephemeral b (hex): {b_hex} (len: {len(b_hex)})")
+
+        print(f"Client ephemeral public A (hex): {client_A_hex} (len: {len(client_A_hex)})")
+        print(f"Client session proof M1 (hex): {client_M1_hex} (len: {len(client_M1_hex)})")
 
         # Decode everything
-        salt_bytes = base64.b64decode(session["salt"])
-        verifier_bytes = bytes.fromhex(session["verifier"])
-        A = bytes.fromhex(data.clientEphemeralPublic)
-        M1 = bytes.fromhex(data.clientSessionProof)
-        b_int = int(session["b"], 16)  # server secret ephemeral private key as int
+        salt_bytes = base64.b64decode(salt_b64)
+        verifier_bytes = bytes.fromhex(verifier_hex)
+        A = bytes.fromhex(client_A_hex)
+        M1 = bytes.fromhex(client_M1_hex)
+        b_int = int(b_hex, 16)
 
-        # Construct Verifier with correct params: (username, salt, verifier, A, b)
+        print(f"Decoded salt bytes length: {len(salt_bytes)}")
+        print(f"Decoded verifier bytes length: {len(verifier_bytes)}")
+        print(f"Decoded A bytes length: {len(A)}")
+        print(f"Decoded M1 bytes length: {len(M1)}")
+        print(f"Server private ephemeral b (int): {b_int}")
+
+        # Create verifier instance for this session
         server = srp.Verifier(email, salt_bytes, verifier_bytes, A, b_int)
 
         # Verify client proof M1
         HAMK = server.verify_session(M1)
         if not HAMK:
+            print("Client proof invalid: server.verify_session returned False or None")
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Client proof invalid"
             )
 
+        print(f"Server session proof HAMK: {HAMK.hex()}")
+
         # Create JWT token
         user = users_collection.find_one({"username": email})
         token = create_access_token({"user_id": str(user["_id"])})
 
-        # Clear session
+        # Clear session after successful login
         srp_sessions.delete_one({"email": email})
 
         return {
@@ -168,5 +186,5 @@ def srp_verify(data: SRPVerifyRequest):
         traceback.print_exc()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="SRP verification failed"
+            detail=f"SRP verification failed: {str(e)}"
         )
