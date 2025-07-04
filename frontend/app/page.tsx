@@ -458,54 +458,53 @@
 
 import { useEffect, useState } from 'react';
 
+function getTimeRemaining(targetTime: Date) {
+  const now = new Date();
+  const diff = targetTime.getTime() - now.getTime();
+
+  const total = Math.max(diff, 0);
+  const seconds = Math.floor((total / 1000) % 60);
+  const minutes = Math.floor((total / 1000 / 60) % 60);
+  const hours = Math.floor((total / 1000 / 60 / 60) % 24);
+
+  return { total, hours, minutes, seconds };
+}
+
 export default function MaintenancePage() {
-  const [timeLeft, setTimeLeft] = useState<number>(0);
-
-  const getNext2PMIST = (): number => {
-    const nowUTC = new Date();
-    const nowIST = new Date(nowUTC.getTime() + 5.5 * 60 * 60 * 1000);
-
-    const next2PMIST = new Date(nowIST);
-    next2PMIST.setHours(14, 0, 0, 0); // 2 PM IST
-
-    if (nowIST.getTime() >= next2PMIST.getTime()) {
-      // If past 2PM IST today, set it to 2PM tomorrow
-      next2PMIST.setDate(next2PMIST.getDate() + 1);
-    }
-
-    // Convert back to UTC timestamp for consistency
-    return next2PMIST.getTime() - 5.5 * 60 * 60 * 1000;
-  };
+  const [timeLeft, setTimeLeft] = useState({
+  hours: '00',
+  minutes: '00',
+  seconds: '00',
+});
 
   useEffect(() => {
-    const updateTimeLeft = () => {
-      const now = Date.now();
-      const targetTime = getNext2PMIST();
-      const remaining = Math.max(targetTime - now, 0);
-      setTimeLeft(remaining);
-    };
+    // Calculate today's 2 PM IST in user's local time
+    const now = new Date();
+    const istOffset = 5.5 * 60; // IST is UTC+5:30
+    const utc = now.getTime() + now.getTimezoneOffset() * 60000;
+    const targetIST = new Date(utc + istOffset * 60000);
+    targetIST.setHours(14, 0, 0, 0); // 2:00 PM IST
 
-    updateTimeLeft();
-    const interval = setInterval(updateTimeLeft, 1000);
-    return () => clearInterval(interval);
+    const timer = setInterval(() => {
+      const remaining = getTimeRemaining(targetIST);
+      setTimeLeft({
+        hours: remaining.hours.toString().padStart(2, '0'),
+        minutes: remaining.minutes.toString().padStart(2, '0'),
+        seconds: remaining.seconds.toString().padStart(2, '0'),
+      });
+
+      if (remaining.total <= 0) clearInterval(timer);
+    }, 1000);
+
+    return () => clearInterval(timer);
   }, []);
 
-  const formatTime = (ms: number) => {
-    const totalSeconds = Math.floor(ms / 1000);
-    const hrs = Math.floor(totalSeconds / 3600);
-    const mins = Math.floor((totalSeconds % 3600) / 60);
-    const secs = totalSeconds % 60;
-    return `${hrs.toString().padStart(2, '0')}h : ${mins
-      .toString()
-      .padStart(2, '0')}m : ${secs.toString().padStart(2, '0')}s`;
-  };
-
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center bg-gray-900 text-white text-center px-4">
-      <h1 className="text-4xl font-bold mb-4">🔧 Under Maintenance</h1>
-      <p className="text-lg mb-8">We&apos;ll be back by 2 PM IST:</p>
-      <div className="text-3xl font-mono bg-black px-6 py-4 rounded-lg shadow-lg border border-gray-700">
-        {formatTime(timeLeft)}
+    <div className="min-h-screen flex flex-col items-center justify-center bg-[#0f172a] text-white font-sans">
+      <h1 className="text-3xl sm:text-4xl font-bold mb-4">🔧 Under Maintenance</h1>
+      <p className="text-lg sm:text-xl mb-6">We&apos;ll be back by 2 PM IST:</p>
+      <div className="bg-black px-6 py-4 rounded-lg text-2xl sm:text-3xl font-mono">
+        {timeLeft.hours}h : {timeLeft.minutes}m : {timeLeft.seconds}s
       </div>
     </div>
   );
