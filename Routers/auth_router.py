@@ -151,10 +151,10 @@ def srp_verify(data: SRPVerifyRequest):
 
         # Recreate verifier object with A included
         verifier = srp.Verifier(
-            username=email,
-            salt=session_data['salt'],
-            verifier=session_data['verifier'],
-            A=A_bytes
+            email,
+            session_data['salt'],
+            session_data['verifier'],
+            A_bytes
         )
         _, _ = verifier.get_challenge()  # Ignored, required to set up internal state
 
