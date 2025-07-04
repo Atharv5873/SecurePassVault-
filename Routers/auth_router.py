@@ -154,7 +154,6 @@ def srp_verify(data: SRPVerifyRequest):
 
         print("Verifier expected A:", A)
         print("Verifier received M1:", M1.hex())
-        print("Expected M1 (from derive_session):", expected_proof)
 
         
         # Verify client proof M1
