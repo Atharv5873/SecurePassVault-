@@ -15,21 +15,6 @@ users_collection = db["users"]
 pending = db["pending_otps"]
 srp_sessions = db["srp_sessions"]
 
-# === Helper: Generate salt and verifier ===
-def create_salt_and_verifier(email: str, password: str):
-    salt = os.urandom(16)
-    salt_b64 = base64.b64encode(salt).decode()
-
-    ctx = SRPContext(
-        username=email,
-        password=password,
-        salt=salt,
-        hash_alg=sha256,
-        ng_type=constants.NG_2048
-    )
-    verifier = ctx.compute_verifier()
-    return salt_b64, verifier.hex()
-
 # === Step 1: Send OTP ===
 @router.post("/register")
 def register(data: EmailRequest):
@@ -68,33 +53,25 @@ def verify_otp(data: VerifyRequest):
         pending.delete_one({"email": email})
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "User already registered")
 
-    # ===== Add validation for verifier and salt here =====
-    if not data.salt or not data.verifier:
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Missing salt or verifier")
-
+    # Validate salt and verifier format (hex/base64)
     if not re.fullmatch(r"^[A-Fa-f0-9]+$", data.verifier):
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "Verifier must be hex-encoded")
-
     try:
-        base64.b64decode(data.salt)
+        salt_bytes = base64.b64decode(data.salt)
     except Exception:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "Salt must be base64-encoded")
-    # =====================================================
 
     try:
-        # Store directly what frontend provides
         users_collection.insert_one({
             "username": email,
-            "salt": data.salt,          # base64 string
-            "verifier": data.verifier   # hex string
+            "salt": data.salt,
+            "verifier": data.verifier
         })
-
         pending.delete_one({"email": email})
         return {"message": "Registration successful"}
     except Exception as e:
         traceback.print_exc()
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, "Registration failed")
-
 
 # === Step 3: SRP Challenge ===
 @router.get("/srp/challenge")
@@ -114,7 +91,7 @@ def srp_challenge(email: str = Query(...)):
             salt=salt_bytes,
             verifier=verifier_bytes,
             hash_alg=sha256,
-            ng_type=constants.NG_2048
+            ng_type=(constants.PRIME_2048, constants.PRIME_2048_GEN)
         )
 
         server_session = SRPServerSession(ctx)
@@ -175,7 +152,7 @@ def srp_verify(data: SRPVerifyRequest):
             salt=salt_bytes,
             verifier=verifier_bytes,
             hash_alg=sha256,
-            ng_type=constants.NG_2048
+            ng_type=(constants.PRIME_2048, constants.PRIME_2048_GEN)
         )
 
         server = SRPServerSession(ctx)
