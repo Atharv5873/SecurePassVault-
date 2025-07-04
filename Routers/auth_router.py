@@ -103,6 +103,7 @@ def srp_challenge(email: str = Query(...)):
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, f"SRP challenge error: {str(e)}")
 
 
+
 # --- Step 4: SRP Verify (Corrected for pysrp) ---
 @router.post("/srp/verify")
 def srp_verify(data: SRPVerifyRequest):
@@ -149,7 +150,15 @@ def srp_verify(data: SRPVerifyRequest):
         M1 = bytes.fromhex(client_M1_hex)
 
         # Create verifier with client's A - this is the key fix
-        server = srp.Verifier(email, salt_bytes, verifier_bytes, A, bytes.fromhex(B_hex))
+        server = srp.Verifier(
+    email,
+    salt_bytes,
+    verifier_bytes,
+    A,
+    bytes.fromhex(B_hex),
+    bytes.fromhex(s_hex)  # 🔥 ADD THIS: `s`
+)
+
 
         
         # Verify client proof M1
