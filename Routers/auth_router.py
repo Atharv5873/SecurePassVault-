@@ -165,22 +165,9 @@ def srp_verify(data: SRPVerifyRequest):
 
         # Create verifier with client's A - this is required by pysrp
         print("Creating verifier with client A...")
-        verifier = srp.Verifier(username, salt_bytes, verifier_bytes, A_bytes)
+        verifier = session_data['verifier_obj']
+        verifier.set_A(A_bytes)
         
-        # Get server's challenge
-        s, B = verifier.get_challenge()
-        if s is None or B is None:
-            print("Failed to get challenge from verifier")
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to generate server challenge"
-            )
-
-        print(f"Server challenge s: {s.hex()}")
-        print(f"Server public B: {B.hex()}")
-
-        # Verify the session using pysrp API
-        # The verifier.verify_session method expects only M1
         HAMK = verifier.verify_session(M1_bytes)
         
         if HAMK is None:
@@ -189,34 +176,35 @@ def srp_verify(data: SRPVerifyRequest):
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Authentication failed"
             )
-
+        
         print(f"Server session proof HAMK: {HAMK.hex()}")
-
-        # Create JWT token
-        user = users_collection.find_one({"username": email})
-        token = create_access_token({"user_id": str(user["_id"])})
-
-        # Clear session after successful login
-        del active_sessions[email]
-        srp_sessions.delete_one({"email": email})
-
-        return {
-            "serverProof": HAMK.hex(),
-            "access_token": token
-        }
-
-    except Exception as e:
-        print("=== SRP VERIFY EXCEPTION ===")
-        print(f"Exception type: {type(e)}")
-        print(f"Exception message: {str(e)}")
-        traceback.print_exc()
-        # Clean up on error
-        if email in active_sessions:
+    
+    
+            # Create JWT token
+            user = users_collection.find_one({"username": email})
+            token = create_access_token({"user_id": str(user["_id"])})
+    
+            # Clear session after successful login
             del active_sessions[email]
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"SRP verification failed: {str(e)}"
-        )
+            srp_sessions.delete_one({"email": email})
+    
+            return {
+                "serverProof": HAMK.hex(),
+                "access_token": token
+            }
+    
+        except Exception as e:
+            print("=== SRP VERIFY EXCEPTION ===")
+            print(f"Exception type: {type(e)}")
+            print(f"Exception message: {str(e)}")
+            traceback.print_exc()
+            # Clean up on error
+            if email in active_sessions:
+                del active_sessions[email]
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"SRP verification failed: {str(e)}"
+            )
 
 # --- Alternative endpoints for v2 ---
 @router.get("/srp/challenge-v2")
