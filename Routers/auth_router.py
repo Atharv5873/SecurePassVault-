@@ -6,7 +6,6 @@ from auth import create_access_token
 from starlette import status
 from db_config import db
 from pymongo import ReturnDocument
-import srp, base64, time
 import srp, base64, time, traceback
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
@@ -66,7 +65,6 @@ def verify_otp(data: VerifyRequest):
     return {"message": "Registration successful"}
 
 # --- Step 3: SRP Challenge ---
-# --- Step 3: SRP Challenge ---
 @router.get("/srp/challenge")
 def srp_challenge(email: str = Query(...)):
     email = email.strip().lower()
@@ -82,13 +80,13 @@ def srp_challenge(email: str = Query(...)):
         verifier = srp.Verifier(email, salt_bytes, verifier_bytes)
         b, B = verifier.get_challenge()
 
-        # Store b and B in MongoDB for later verification (store b hex for later)
+        # Store b (private key) as int hex string for later
         srp_sessions.update_one(
             {"email": email},
             {"$set": {
                 "salt": user["salt"],
                 "verifier": user["verifier"],
-                "b": b.hex(),      # store server secret ephemeral private key
+                "b": hex(b)[2:],  # store server secret ephemeral private key as hex string without 0x prefix
                 "B": B.hex(),
                 "timestamp": time.time()
             }},
@@ -125,7 +123,6 @@ def srp_verify(data: SRPVerifyRequest):
         )
 
     try:
-        # Debug logs
         print("=== SRP VERIFY DEBUG ===")
         print(f"Email: {email}")
         print(f"Salt (base64): {session['salt']}")
@@ -139,10 +136,10 @@ def srp_verify(data: SRPVerifyRequest):
         verifier_bytes = bytes.fromhex(session["verifier"])
         A = bytes.fromhex(data.clientEphemeralPublic)
         M1 = bytes.fromhex(data.clientSessionProof)
-        b = bytes.fromhex(session["b"])  # server secret ephemeral private key
+        b_int = int(session["b"], 16)  # server secret ephemeral private key as int
 
-        # Construct Verifier with correct params (username, verifier, A, b)
-        server = srp.Verifier(email, verifier_bytes, A, b)
+        # Construct Verifier with correct params: (username, salt, verifier, A, b)
+        server = srp.Verifier(email, salt_bytes, verifier_bytes, A, b_int)
 
         # Verify client proof M1
         HAMK = server.verify_session(M1)
