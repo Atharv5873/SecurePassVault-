@@ -147,9 +147,10 @@ def srp_verify(data: SRPVerifyRequest):
         verifier_bytes = bytes.fromhex(verifier_hex)
         A = int(client_A_hex, 16)
         M1 = bytes.fromhex(client_M1_hex)
+        A_bytes = A.to_bytes((A.bit_length() + 7) // 8, byteorder='big')
+        
+        server = srp.Verifier(email, salt_bytes, verifier_bytes, A_bytes)
 
-        # Create verifier with client's A - this is the key fix
-        server = srp.Verifier(email, salt_bytes, verifier_bytes, A)
 
         print("Verifier expected A:", A)
         print("Verifier received M1:", M1.hex())
