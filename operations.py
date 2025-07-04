@@ -4,6 +4,7 @@ from bson import ObjectId
 
 users_collection = db["users"]
 products_collection=db["products"]
+notes_collection = db["notes"]
 
 ### Creds:
 
@@ -117,5 +118,50 @@ def delete_product_key(product_id, user_id):
         return {
             "product_name": product["product_name"]
         }
+    return False
+
+def add_note(title, content, user_id):
+    key = get_user_key(user_id)
+    encrypted_content = encrypt_password(content, key)
+    result = notes_collection.insert_one({
+        "title": title,
+        "content": encrypted_content,
+        "user_id": ObjectId(user_id)
+    })
+    return str(result.inserted_id)
+
+def view_notes(user_id):
+    notes = notes_collection.find({"user_id": ObjectId(user_id)})
+    return [{"id": str(n["_id"]), "title": n["title"]} for n in notes]
+
+def reveal_note(note_id, user_id):
+    note = notes_collection.find_one({
+        "_id": ObjectId(note_id),
+        "user_id": ObjectId(user_id)
+    })
+    if not note:
+        return None
+    key = get_user_key(user_id)
+    decrypted_content = decrypt_password(note["content"], key)
+    return {
+        "title": note["title"],
+        "content": decrypted_content
+    }
+
+### Notes
+
+def delete_note(note_id, user_id):
+    note = notes_collection.find_one({
+        "_id": ObjectId(note_id),
+        "user_id": ObjectId(user_id)
+    })
+    if not note:
+        return None
+    result = notes_collection.delete_one({
+        "_id": ObjectId(note_id),
+        "user_id": ObjectId(user_id)
+    })
+    if result.deleted_count > 0:
+        return {"title": note["title"]}
     return False
 

@@ -19,7 +19,6 @@ class ProductKeyIn(BaseModel):
     license_key:str
     description:str | None  = None
     
-
 class VerifyRequest(BaseModel):
     email: str
     otp: str
@@ -29,3 +28,7 @@ class VerifyRequest(BaseModel):
     
 class EmailRequest(BaseModel):
     email: str
+    
+class NoteIn(BaseModel):
+    title: str
+    content: str

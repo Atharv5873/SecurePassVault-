@@ -1,23 +1,12 @@
 from fastapi import FastAPI
-from Routers import credentials_router, auth_router, admin_router, utils_router, products_router
+from Routers import credentials_router, auth_router, admin_router, utils_router, products_router, notes_router
 from fastapi.middleware.cors import CORSMiddleware
 from apscheduler.schedulers.background import BackgroundScheduler
 import httpx
-from db_config import db
 from fastapi.responses import HTMLResponse
-from contextlib import asynccontextmanager
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    # Startup code: create TTL index on pending_otps.expiry
-    print("Creating TTL index on pending_otps.expiry...")
-    db["pending_otps"].create_index("expiry", expireAfterSeconds=0)
-    print("TTL index created.")
-    yield
-    # Shutdown code if needed
-    print("Shutting down...")
 
-app = FastAPI(title="SecurePassVault API", lifespan=lifespan)
+app = FastAPI(title="SecurePassVault API")
 
 app.add_middleware(
     CORSMiddleware,
@@ -32,6 +21,7 @@ app.include_router(credentials_router.router)
 app.include_router(admin_router.router)
 app.include_router(utils_router.router)
 app.include_router(products_router.router)
+app.include_router(notes_router.router)
 
 def ping_site():
     try:
