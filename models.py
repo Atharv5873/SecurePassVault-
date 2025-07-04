@@ -19,12 +19,12 @@ class ProductKeyIn(BaseModel):
     license_key:str
     description:str | None  = None
     
-
 class VerifyRequest(BaseModel):
     email: str
     otp: str
-    password: str  # Used to generate SRP verifier
-    
+    salt: str  # base64-encoded string from frontend
+    verifier: str  # hex-encoded verifier from frontend
+
 class EmailRequest(BaseModel):
     email: str
     

@@ -8,7 +8,7 @@ from db_config import db
 from pymongo import ReturnDocument
 from srptools import SRPContext, SRPServerSession, constants
 from hashlib import sha256
-import base64, time, os, traceback
+import base64, time, os, traceback, re
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 users_collection = db["users"]
@@ -68,12 +68,25 @@ def verify_otp(data: VerifyRequest):
         pending.delete_one({"email": email})
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "User already registered")
 
+    # ===== Add validation for verifier and salt here =====
+    if not data.salt or not data.verifier:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Missing salt or verifier")
+
+    if not re.fullmatch(r"^[A-Fa-f0-9]+$", data.verifier):
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Verifier must be hex-encoded")
+
     try:
-        salt_b64, verifier_hex = create_salt_and_verifier(email, data.password)
+        base64.b64decode(data.salt)
+    except Exception:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Salt must be base64-encoded")
+    # =====================================================
+
+    try:
+        # Store directly what frontend provides
         users_collection.insert_one({
             "username": email,
-            "salt": salt_b64,
-            "verifier": verifier_hex
+            "salt": data.salt,          # base64 string
+            "verifier": data.verifier   # hex string
         })
 
         pending.delete_one({"email": email})
@@ -81,6 +94,7 @@ def verify_otp(data: VerifyRequest):
     except Exception as e:
         traceback.print_exc()
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, "Registration failed")
+
 
 # === Step 3: SRP Challenge ===
 @router.get("/srp/challenge")
