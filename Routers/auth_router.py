@@ -66,6 +66,7 @@ def verify_otp(data: VerifyRequest):
     return {"message": "Registration successful"}
 
 # --- Step 3: SRP Challenge ---
+# --- Step 3: SRP Challenge ---
 @router.get("/srp/challenge")
 def srp_challenge(email: str = Query(...)):
     email = email.strip().lower()
@@ -77,19 +78,17 @@ def srp_challenge(email: str = Query(...)):
         salt_bytes = base64.b64decode(user["salt"])
         verifier_bytes = bytes.fromhex(user["verifier"])
 
-        # Get the server challenge tuple (b, B)
-        challenge = srp.Verifier(email, salt_bytes, verifier_bytes).get_challenge()
-        if not challenge:
-            raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, "Failed to generate SRP challenge")
+        # Create Verifier instance to get server ephemeral b and B
+        verifier = srp.Verifier(email, salt_bytes, verifier_bytes)
+        b, B = verifier.get_challenge()
 
-        _, B = challenge  # unpack tuple correctly
-
-        # Store session in MongoDB for later verification
+        # Store b and B in MongoDB for later verification (store b hex for later)
         srp_sessions.update_one(
             {"email": email},
             {"$set": {
                 "salt": user["salt"],
                 "verifier": user["verifier"],
+                "b": b.hex(),      # store server secret ephemeral private key
                 "B": B.hex(),
                 "timestamp": time.time()
             }},
@@ -97,8 +96,8 @@ def srp_challenge(email: str = Query(...)):
         )
 
         return {
-            "salt": user["salt"],  # base64
-            "B": B.hex(),          # hex string
+            "salt": user["salt"],  # base64 encoded salt
+            "B": B.hex(),          # hex string of server ephemeral public key
             "message": "Send A and M1 to /srp/verify"
         }
 
@@ -140,19 +139,12 @@ def srp_verify(data: SRPVerifyRequest):
         verifier_bytes = bytes.fromhex(session["verifier"])
         A = bytes.fromhex(data.clientEphemeralPublic)
         M1 = bytes.fromhex(data.clientSessionProof)
-        B = bytes.fromhex(session["B"])
+        b = bytes.fromhex(session["b"])  # server secret ephemeral private key
 
-        # ✅ Pass all arguments explicitly
-        server = srp.Verifier(
-            username=email,
-            salt=salt_bytes,
-            verifier=verifier_bytes,
-            A=A,
-            B=B,
-            hash_alg="SHA256"  # ensure consistent hashing
-        )
+        # Construct Verifier with correct params (username, verifier, A, b)
+        server = srp.Verifier(email, verifier_bytes, A, b)
 
-        # Verify session
+        # Verify client proof M1
         HAMK = server.verify_session(M1)
         if not HAMK:
             raise HTTPException(
@@ -174,7 +166,7 @@ def srp_verify(data: SRPVerifyRequest):
 
     except Exception as e:
         print("=== SRP VERIFY EXCEPTION ===")
-        traceback.print_exc()  # Logs full traceback
+        traceback.print_exc()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="SRP verification failed"
