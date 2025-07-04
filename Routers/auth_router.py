@@ -94,18 +94,12 @@ def srp_challenge(email: str = Query(...)):
         salt_bytes = base64.b64decode(user["salt"])
         verifier_bytes = bytes.fromhex(user["verifier"])
 
-        # Create verifier using pysrp API
-        verifier = srp.Verifier(email, salt_bytes, verifier_bytes, srp.SHA1, srp.NG_2048)
-        
-        # Get server's public key (B) and random value (s)
-        s, B = verifier.get_challenge()
-
-        # Store session data
+        # Store user data for later verifier creation
+        # pysrp requires the client's A to create the verifier
         session_data = {
-            'verifier': verifier,
             'salt': salt_bytes,
-            'B': B,
-            's': s
+            'verifier': verifier_bytes,
+            'username': email
         }
         active_sessions[email] = (session_data, time.time())
 
@@ -115,8 +109,6 @@ def srp_challenge(email: str = Query(...)):
             {"$set": {
                 "salt": user["salt"],
                 "verifier": user["verifier"],
-                "s": s.hex(),
-                "B": B.hex(),
                 "timestamp": time.time()
             }},
             upsert=True
@@ -124,7 +116,6 @@ def srp_challenge(email: str = Query(...)):
 
         return {
             "salt": user["salt"],
-            "B": B.hex(),
             "message": "Send A and M1 to /srp/verify"
         }
 
@@ -165,8 +156,10 @@ def srp_verify(data: SRPVerifyRequest):
         print(f"Client ephemeral A (hex): {client_A_hex}")
         print(f"Client proof M1 (hex): {client_M1_hex}")
 
-        # Get the verifier from session
-        verifier = session_data['verifier']
+        # Get session data
+        salt_bytes = session_data['salt']
+        verifier_bytes = session_data['verifier']
+        username = session_data['username']
 
         # Decode client data
         A_bytes = bytes.fromhex(client_A_hex)
@@ -175,9 +168,25 @@ def srp_verify(data: SRPVerifyRequest):
         print(f"Client A (bytes): {A_bytes.hex()}")
         print(f"Client M1 (bytes): {M1_bytes.hex()}")
 
+        # Create verifier with client's A - this is required by pysrp
+        print("Creating verifier with client A...")
+        verifier = srp.Verifier(username, salt_bytes, verifier_bytes, A_bytes)
+        
+        # Get server's challenge
+        s, B = verifier.get_challenge()
+        if s is None or B is None:
+            print("Failed to get challenge from verifier")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to generate server challenge"
+            )
+
+        print(f"Server challenge s: {s.hex()}")
+        print(f"Server public B: {B.hex()}")
+
         # Verify the session using pysrp API
-        # The verifier.verify_session method expects the client's A and M1
-        HAMK = verifier.verify_session(A_bytes, M1_bytes)
+        # The verifier.verify_session method expects only M1
+        HAMK = verifier.verify_session(M1_bytes)
         
         if HAMK is None:
             print("Client proof invalid: verifier.verify_session returned None")
