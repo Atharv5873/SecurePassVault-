@@ -5,6 +5,7 @@ from bson import ObjectId
 users_collection = db["users"]
 products_collection=db["products"]
 notes_collection = db["notes"]
+api_keys_collection = db["api_keys"]
 
 ### Creds:
 
@@ -165,3 +166,55 @@ def delete_note(note_id, user_id):
         return {"title": note["title"]}
     return False
 
+### API_keys
+
+def add_api_key(service_name, api_key, description, user_id):
+    key = get_user_key(user_id)
+    encrypted_api_key = encrypt_password(api_key, key)
+    result = api_keys_collection.insert_one({
+        "service_name": service_name,
+        "api_key": encrypted_api_key,
+        "description": description,
+        "user_id": ObjectId(user_id)
+    })
+    return str(result.inserted_id)
+
+def view_api_keys(user_id):
+    keys = api_keys_collection.find({"user_id": ObjectId(user_id)})
+    return [{
+        "id": str(k["_id"]),
+        "service_name": k["service_name"],
+        "description": k.get("description", "")
+    } for k in keys]
+
+def reveal_api_key(api_key_id, user_id):
+    key_doc = api_keys_collection.find_one({
+        "_id": ObjectId(api_key_id),
+        "user_id": ObjectId(user_id)
+    })
+    if not key_doc:
+        return None
+    key = get_user_key(user_id)
+    decrypted_api_key = decrypt_password(key_doc["api_key"], key)
+    return {
+        "service_name": key_doc["service_name"],
+        "api_key": decrypted_api_key,
+        "description": key_doc.get("description", "")
+    }
+
+def delete_api_key(api_key_id, user_id):
+    key_doc = api_keys_collection.find_one({
+        "_id": ObjectId(api_key_id),
+        "user_id": ObjectId(user_id)
+    })
+    if not key_doc:
+        return None
+    result = api_keys_collection.delete_one({
+        "_id": ObjectId(api_key_id),
+        "user_id": ObjectId(user_id)
+    })
+    if result.deleted_count > 0:
+        return {
+            "service_name": key_doc["service_name"]
+        }
+    return False

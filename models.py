@@ -32,3 +32,8 @@ class EmailRequest(BaseModel):
 class NoteIn(BaseModel):
     title: str
     content: str
+    
+class APIKeyIn(BaseModel):
+    service_name: str
+    api_key: str
+    description: str | None = None
