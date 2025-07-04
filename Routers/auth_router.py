@@ -87,11 +87,10 @@ def srp_challenge(email: str = Query(...)):
         verifier_bytes = bytes.fromhex(user["verifier"])
 
         ctx = SRPContext(
-            username=email,
-            salt=salt_bytes,
-            verifier=verifier_bytes,
-            hash_alg=sha256,
-            ng_type=(constants.PRIME_2048, constants.PRIME_2048_GEN)
+        username=email,
+        verifier=verifier_bytes,
+        ng_type=(constants.PRIME_2048, constants.PRIME_2048_GEN),
+        hash_alg=sha256
         )
 
         server_session = SRPServerSession(ctx)
@@ -148,12 +147,12 @@ def srp_verify(data: SRPVerifyRequest):
         priv = bytes.fromhex(priv_hex)
 
         ctx = SRPContext(
-            username=email,
-            salt=salt_bytes,
-            verifier=verifier_bytes,
-            hash_alg=sha256,
-            ng_type=(constants.PRIME_2048, constants.PRIME_2048_GEN)
+        username=email,
+        verifier=verifier_bytes,
+        ng_type=(constants.PRIME_2048, constants.PRIME_2048_GEN),
+        hash_alg=sha256
         )
+
 
         server = SRPServerSession(ctx)
         server.public = B
