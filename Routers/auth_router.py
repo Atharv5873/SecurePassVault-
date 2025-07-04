@@ -189,7 +189,8 @@ def srp_verify(data: SRPVerifyRequest):
         traceback.print_exc()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"SRP verification failed: {str(e)}"
+            detail=f"SRP verification failed: {e.decode(errors='ignore') if isinstance(e, bytes) else str(e)}"
+
         )
 
 
