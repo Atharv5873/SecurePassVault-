@@ -84,7 +84,7 @@ def srp_challenge(email: str = Query(...)):
             {"$set": {
                 "salt": user["salt"],
                 "verifier": user["verifier"],
-                "b": hex(b)[2:],  # hex string without '0x'
+                "b": b.hex(),  # convert bytes to hex string correctly
                 "B": B.hex(),
                 "timestamp": time.time()
             }},
@@ -99,8 +99,9 @@ def srp_challenge(email: str = Query(...)):
 
     except Exception as e:
         import traceback
-        traceback.print_exc()  # <--- print full stack trace to console/log
+        traceback.print_exc()
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, f"SRP challenge error: {str(e)}")
+
 
 
 # --- Step 4: SRP Verify ---
