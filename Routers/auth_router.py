@@ -88,34 +88,29 @@ def srp_challenge(email: str = Query(...)):
         raise HTTPException(status.HTTP_404_NOT_FOUND, "User not found")
 
     try:
-        # Clean up old sessions
         cleanup_old_sessions()
 
         salt_bytes = base64.b64decode(user["salt"])
         verifier_bytes = bytes.fromhex(user["verifier"])
 
-        # Store user data for later verifier creation
-        # pysrp requires the client's A to create the verifier
-        session_data = {
+        # Generate B to return to client
+        verifier = srp.Verifier(email, salt_bytes, verifier_bytes, None)
+        s, B = verifier.get_challenge()
+
+        if s is None or B is None:
+            raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, "Failed to generate challenge")
+
+        # Store session with verifier
+        active_sessions[email] = ({
             'salt': salt_bytes,
             'verifier': verifier_bytes,
-            'username': email
-        }
-        active_sessions[email] = (session_data, time.time())
-
-        # Also store in database for reference
-        srp_sessions.update_one(
-            {"email": email},
-            {"$set": {
-                "salt": user["salt"],
-                "verifier": user["verifier"],
-                "timestamp": time.time()
-            }},
-            upsert=True
-        )
+            'username': email,
+            'verifier_obj': verifier
+        }, time.time())
 
         return {
-            "salt": user["salt"],
+            "salt": base64.b64encode(salt_bytes).decode(),
+            "B": B.hex(),
             "message": "Send A and M1 to /srp/verify"
         }
 
