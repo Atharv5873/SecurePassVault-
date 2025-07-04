@@ -145,11 +145,16 @@ def srp_verify(data: SRPVerifyRequest):
         # Decode data
         salt_bytes = base64.b64decode(salt_b64)
         verifier_bytes = bytes.fromhex(verifier_hex)
-        A = bytes.fromhex(client_A_hex)
+        A = int(client_A_hex, 16)
         M1 = bytes.fromhex(client_M1_hex)
 
         # Create verifier with client's A - this is the key fix
         server = srp.Verifier(email, salt_bytes, verifier_bytes, A)
+
+        print("Verifier expected A:", A)
+        print("Verifier received M1:", M1.hex())
+        print("Expected M1 (from derive_session):", expected_proof)
+
         
         # Verify client proof M1
         HAMK = server.verify_session(M1)
