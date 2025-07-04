@@ -76,17 +76,15 @@ def srp_challenge(email: str = Query(...)):
         salt_bytes = base64.b64decode(user["salt"])
         verifier_bytes = bytes.fromhex(user["verifier"])
 
-        # Create Verifier instance to get server ephemeral b and B
         verifier = srp.Verifier(email, salt_bytes, verifier_bytes)
         b, B = verifier.get_challenge()
 
-        # Store b (private key) as int hex string for later
         srp_sessions.update_one(
             {"email": email},
             {"$set": {
                 "salt": user["salt"],
                 "verifier": user["verifier"],
-                "b": hex(b)[2:],  # store server secret ephemeral private key as hex string without 0x prefix
+                "b": hex(b)[2:],  # hex string without '0x'
                 "B": B.hex(),
                 "timestamp": time.time()
             }},
@@ -94,13 +92,16 @@ def srp_challenge(email: str = Query(...)):
         )
 
         return {
-            "salt": user["salt"],  # base64 encoded salt
-            "B": B.hex(),          # hex string of server ephemeral public key
+            "salt": user["salt"],
+            "B": B.hex(),
             "message": "Send A and M1 to /srp/verify"
         }
 
     except Exception as e:
-        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, f"SRP challenge setup failed: {str(e)}")
+        import traceback
+        traceback.print_exc()  # <--- print full stack trace to console/log
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, f"SRP challenge error: {str(e)}")
+
 
 # --- Step 4: SRP Verify ---
 @router.post("/srp/verify")
