@@ -123,6 +123,7 @@ def srp_verify(data: SRPVerifyRequest):
         )
 
     try:
+        # Debug logs for tracing values
         print("=== SRP VERIFY DEBUG ===")
         print(f"Email: {email}")
 
@@ -188,3 +189,4 @@ def srp_verify(data: SRPVerifyRequest):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"SRP verification failed: {str(e)}"
         )
+
