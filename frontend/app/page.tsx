@@ -483,7 +483,7 @@ export default function MaintenancePage() {
     const istOffset = 5.5 * 60; // IST is UTC+5:30
     const utc = now.getTime() + now.getTimezoneOffset() * 60000;
     const targetIST = new Date(utc + istOffset * 60000);
-    targetIST.setHours(02, 0, 0); // 2:00 PM IST
+    targetIST.setHours(23, 59, 59, 0); // 2:00 PM IST
 
     const timer = setInterval(() => {
       const remaining = getTimeRemaining(targetIST);
