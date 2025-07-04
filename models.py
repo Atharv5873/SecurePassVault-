@@ -19,16 +19,12 @@ class ProductKeyIn(BaseModel):
     license_key:str
     description:str | None  = None
     
+
 class VerifyRequest(BaseModel):
     email: str
     otp: str
-    salt: str  # base64-encoded string from frontend
-    verifier: str  # hex-encoded verifier from frontend
-
+    password: str
+    salt: str
+    
 class EmailRequest(BaseModel):
     email: str
-    
-class SRPVerifyRequest(BaseModel):
-    email: str
-    clientEphemeralPublic: str  # A (hex)
-    clientSessionProof: str     # M1 (hex)

@@ -1,187 +1,90 @@
-from fastapi import APIRouter, HTTPException, Query
-from models import EmailRequest, VerifyRequest, SRPVerifyRequest
-from utils.otp import generate_otp
-from utils.email_utils import send_otp_email
-from auth import create_access_token
+from fastapi import APIRouter,HTTPException, Depends, Query
+from models import VerifyRequest, EmailRequest
+from utils.otp import *
+from utils.email_utils import *
+from fastapi.security import OAuth2PasswordRequestForm
+from auth import create_access_token,create_user,authenticate_user,get_current_user
 from starlette import status
 from db_config import db
+from bson import ObjectId
+import time
 from pymongo import ReturnDocument
-from srptools import SRPContext, SRPServerSession, constants
-from hashlib import sha256
-import base64, time, os, traceback, re
+
+pending_otps = {}  # email -> {"otp": ..., "expiry": ...}
+
+users_collection=db["users"]
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
-users_collection = db["users"]
-pending = db["pending_otps"]
-srp_sessions = db["srp_sessions"]
 
-# === Step 1: Send OTP ===
 @router.post("/register")
 def register(data: EmailRequest):
     email = data.email.strip().lower()
-
     if users_collection.find_one({"username": email}):
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Email already registered")
+        raise HTTPException(400, "Email already registered")
 
     otp = generate_otp()
-    expiry = time.time() + 300  # 5 mins
+    expiry = time.time() + 300  # 5 minutes from now
 
-    pending.find_one_and_update(
+    # Upsert OTP doc
+    db["pending_otps"].find_one_and_update(
         {"email": email},
         {"$set": {"otp": otp, "expiry": expiry}},
-        upsert=True, return_document=ReturnDocument.AFTER
+        upsert=True,
+        return_document=ReturnDocument.AFTER
     )
 
     send_otp_email(email, otp)
     return {"message": "OTP sent"}
 
-# === Step 2: Verify OTP and register user ===
+
 @router.post("/verify-otp")
 def verify_otp(data: VerifyRequest):
     email = data.email.strip().lower()
-    rec = pending.find_one({"email": email})
+    record = db["pending_otps"].find_one({"email": email})
 
-    if not rec:
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, "No OTP request found")
-    if rec["otp"] != data.otp:
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Invalid OTP")
-    if time.time() > rec["expiry"]:
-        pending.delete_one({"email": email})
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, "OTP expired")
+    if not record:
+        raise HTTPException(400, "No OTP request found for this email")
+    if record["otp"] != data.otp:
+        raise HTTPException(400, "Invalid OTP")
+    if time.time() > record["expiry"]:
+        db["pending_otps"].delete_one({"email": email})
+        raise HTTPException(400, "OTP expired")
 
-    if users_collection.find_one({"username": email}):
-        pending.delete_one({"email": email})
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, "User already registered")
+    create_user(email, data.password, data.salt)
+    db["pending_otps"].delete_one({"email": email})
+    return {"message": "Registration successful"}
 
-    # Validate salt and verifier format (hex/base64)
-    if not re.fullmatch(r"^[A-Fa-f0-9]+$", data.verifier):
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Verifier must be hex-encoded")
-    try:
-        salt_bytes = base64.b64decode(data.salt)
-    except Exception:
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Salt must be base64-encoded")
+    
+@router.post("/token")
+def user_login(form_data: OAuth2PasswordRequestForm = Depends()):
+    db_user=authenticate_user(form_data.username,form_data.password)
+    if not db_user:
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    token=create_access_token({"user_id":str(db_user["_id"])})
+    return {"access_token": token, "token_type": "bearer"}
 
-    try:
-        users_collection.insert_one({
-            "username": email,
-            "salt": data.salt,
-            "verifier": data.verifier
-        })
-        pending.delete_one({"email": email})
-        return {"message": "Registration successful"}
-    except Exception as e:
-        traceback.print_exc()
-        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, "Registration failed")
-
-# === Step 3: SRP Challenge ===
-@router.get("/srp/challenge")
-def srp_challenge(email: str = Query(...)):
-    email = email.strip().lower()
-    user = users_collection.find_one({"username": email})
-
+@router.get("/salt")
+def get_salt(username:str=Query(...),user_id:str=Depends(get_current_user)):
+    username = username.strip().lower()
+    user = users_collection.find_one({"_id": ObjectId(user_id)})
     if not user:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, "User not found")
-
-    try:
-        salt_bytes = base64.b64decode(user["salt"])
-        verifier_bytes = bytes.fromhex(user["verifier"])
-
-        ctx = SRPContext(
-        username=email,
-        verifier=verifier_bytes,
-        ng_type=(constants.PRIME_2048, constants.PRIME_2048_GEN),
-        hash_alg=sha256
+        raise HTTPException(status_code=404, detail="User not found")
+    if user["username"] != username:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You can only access your own salt."
         )
+    return {"salt": user["salt"]}
 
-        server_session = SRPServerSession(ctx)
-        B = server_session.public
+@router.get("/me")
+def get_user_info(user_id: str = Depends(get_current_user)):
+    user = users_collection.find_one({"_id": ObjectId(user_id)})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return {
+        "id": str(user["_id"]),
+        "email": user["username"],
+        "is_admin": user.get("is_admin", False)
+    }
 
-        srp_sessions.update_one(
-            {"email": email},
-            {"$set": {
-                "salt": user["salt"],
-                "verifier": user["verifier"],
-                "B": B.hex(),
-                "private": server_session.private.hex(),
-                "timestamp": time.time()
-            }},
-            upsert=True
-        )
-
-        return {
-            "salt": user["salt"],
-            "B": B.hex(),
-            "message": "Send A and M1 to /srp/verify"
-        }
-
-    except Exception as e:
-        traceback.print_exc()
-        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, f"SRP challenge error: {str(e)}")
-
-# === Step 4: SRP Verify ===
-@router.post("/srp/verify")
-def srp_verify(data: SRPVerifyRequest):
-    email = data.email.strip().lower()
-    session = srp_sessions.find_one({"email": email})
-
-    if not session:
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="No SRP challenge started or session expired")
-
-    if time.time() - session["timestamp"] > 300:
-        srp_sessions.delete_one({"email": email})
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="SRP session expired")
-
-    try:
-        salt_b64 = session['salt']
-        verifier_hex = session['verifier']
-        B_hex = session['B']
-        priv_hex = session['private']
-        A_hex = data.clientEphemeralPublic
-        M1_hex = data.clientSessionProof
-
-        salt_bytes = base64.b64decode(salt_b64)
-        verifier_bytes = bytes.fromhex(verifier_hex)
-        A = bytes.fromhex(A_hex)
-        M1 = bytes.fromhex(M1_hex)
-        B = bytes.fromhex(B_hex)
-        priv = bytes.fromhex(priv_hex)
-
-        ctx = SRPContext(
-        username=email,
-        verifier=verifier_bytes,
-        ng_type=(constants.PRIME_2048, constants.PRIME_2048_GEN),
-        hash_alg=sha256
-        )
-
-
-        server = SRPServerSession(ctx)
-        server.public = B
-        server.private = priv
-        server.process(A)
-
-        HAMK = server.verify(M1)
-        if HAMK is None:
-            raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail="Invalid client proof")
-
-        user = users_collection.find_one({"username": email})
-        token = create_access_token({"user_id": str(user["_id"])})
-
-        srp_sessions.delete_one({"email": email})
-
-        return {
-            "serverProof": HAMK.hex(),
-            "access_token": token
-        }
-
-    except Exception as e:
-        traceback.print_exc()
-        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"SRP verification failed: {str(e)}")
-
-# === V2 Routes (Frontend-friendly) ===
-@router.get("/srp/challenge-v2")
-def srp_challenge_v2(email: str = Query(...)):
-    return srp_challenge(email)
-
-@router.post("/srp/verify-v2")
-def srp_verify_v2(data: SRPVerifyRequest):
-    return srp_verify(data)
+    
