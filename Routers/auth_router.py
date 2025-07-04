@@ -13,7 +13,7 @@ users_collection = db["users"]
 pending = db["pending_otps"]
 srp_sessions = db["srp_sessions"]
 
-# --- Step 1: Request OTP ---
+# --- Step 1: Register OTP ---
 @router.post("/register")
 def register(data: EmailRequest):
     email = data.email.strip().lower()
@@ -21,7 +21,7 @@ def register(data: EmailRequest):
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "Email already registered")
 
     otp = generate_otp()
-    expiry = time.time() + 300  # OTP valid for 5 mins
+    expiry = time.time() + 300
 
     pending.find_one_and_update(
         {"email": email},
@@ -31,7 +31,7 @@ def register(data: EmailRequest):
     send_otp_email(email, otp)
     return {"message": "OTP sent"}
 
-# --- Step 2: Verify OTP and register SRP verifier ---
+# --- Step 2: Verify OTP and Register Verifier ---
 @router.post("/verify-otp")
 def verify_otp(data: VerifyRequest):
     email = data.email.strip().lower()
@@ -49,7 +49,7 @@ def verify_otp(data: VerifyRequest):
         base64.b64decode(data.salt)
         bytes.fromhex(data.verifier)
     except Exception:
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Invalid salt or verifier format")
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Invalid salt or verifier")
 
     if users_collection.find_one({"username": email}):
         pending.delete_one({"email": email})
@@ -64,7 +64,7 @@ def verify_otp(data: VerifyRequest):
     pending.delete_one({"email": email})
     return {"message": "Registration successful"}
 
-# --- Step 3: SRP Challenge (Fixed) ---
+# --- Step 3: SRP Challenge ---
 @router.get("/srp/challenge")
 def srp_challenge(email: str = Query(...)):
     email = email.strip().lower()
@@ -76,8 +76,7 @@ def srp_challenge(email: str = Query(...)):
         salt_bytes = base64.b64decode(user["salt"])
         verifier_bytes = bytes.fromhex(user["verifier"])
 
-        # Create verifier without A (client's ephemeral public key)
-        verifier = srp.Verifier(email, salt_bytes, verifier_bytes)
+        verifier = srp.Verifier(email, salt_bytes, verifier_bytes, hash_alg="SHA256")
         s, B = verifier.get_challenge()
 
         srp_sessions.update_one(
@@ -102,33 +101,23 @@ def srp_challenge(email: str = Query(...)):
         traceback.print_exc()
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, f"SRP challenge error: {str(e)}")
 
-
-
-# --- Step 4: SRP Verify (Corrected for pysrp) ---
+# --- Step 4: SRP Verify ---
 @router.post("/srp/verify")
 def srp_verify(data: SRPVerifyRequest):
     email = data.email.strip().lower()
     session = srp_sessions.find_one({"email": email})
 
     if not session:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="No SRP challenge started or session expired"
-        )
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "No SRP challenge started or session expired")
 
-    # Expire session if older than 5 minutes
     if time.time() - session["timestamp"] > 300:
         srp_sessions.delete_one({"email": email})
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="SRP session expired"
-        )
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "SRP session expired")
 
     try:
         print("=== SRP VERIFY DEBUG ===")
         print(f"Email: {email}")
 
-        # Get session data
         salt_b64 = session['salt']
         verifier_hex = session['verifier']
         s_hex = session['s']
@@ -143,40 +132,31 @@ def srp_verify(data: SRPVerifyRequest):
         print(f"Client ephemeral A (hex): {client_A_hex}")
         print(f"Client proof M1 (hex): {client_M1_hex}")
 
-        # Decode data
         salt_bytes = base64.b64decode(salt_b64)
         verifier_bytes = bytes.fromhex(verifier_hex)
         A = bytes.fromhex(client_A_hex)
         M1 = bytes.fromhex(client_M1_hex)
 
-        # Create verifier with client's A - this is the key fix
         server = srp.Verifier(
-    email,
-    salt_bytes,
-    verifier_bytes,
-    A,
-    bytes.fromhex(B_hex),
-    bytes.fromhex(s_hex)  # 🔥 ADD THIS: `s`
-)
+            username=email,
+            salt=salt_bytes,
+            verifier=verifier_bytes,
+            A=A,
+            B=bytes.fromhex(B_hex),
+            s=bytes.fromhex(s_hex),
+            hash_alg="SHA256"  # ✅ FIXED
+        )
 
-
-        
-        # Verify client proof M1
         HAMK = server.verify_session(M1)
         if HAMK is None:
             print("Client proof invalid: server.verify_session returned None")
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Client proof invalid"
-            )
+            raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail="Client proof invalid")
 
         print(f"Server session proof HAMK: {HAMK.hex()}")
 
-        # Create JWT token
         user = users_collection.find_one({"username": email})
         token = create_access_token({"user_id": str(user["_id"])})
 
-        # Clear session after successful login
         srp_sessions.delete_one({"email": email})
 
         return {
@@ -187,20 +167,13 @@ def srp_verify(data: SRPVerifyRequest):
     except Exception as e:
         print("=== SRP VERIFY EXCEPTION ===")
         traceback.print_exc()
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"SRP verification failed: {e.decode(errors='ignore') if isinstance(e, bytes) else str(e)}"
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, f"SRP verification failed: {str(e)}")
 
-        )
-
-
-# --- Alternative endpoint for v2 (matches your frontend) ---
+# --- v2 endpoints (optional) ---
 @router.get("/srp/challenge-v2")
 def srp_challenge_v2(email: str = Query(...)):
-    # This is identical to the main challenge endpoint
     return srp_challenge(email)
 
 @router.post("/srp/verify-v2")
 def srp_verify_v2(data: SRPVerifyRequest):
-    # This is identical to the main verify endpoint
     return srp_verify(data)
