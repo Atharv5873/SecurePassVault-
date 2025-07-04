@@ -483,7 +483,7 @@ export default function MaintenancePage() {
     const istOffset = 5.5 * 60; // IST is UTC+5:30
     const utc = now.getTime() + now.getTimezoneOffset() * 60000;
     const targetIST = new Date(utc + istOffset * 60000);
-    targetIST.setHours(16, 0, 0, 0); // 2:00 PM IST
+    targetIST.setHours(18, 0, 0, 0); // 2:00 PM IST
 
     const timer = setInterval(() => {
       const remaining = getTimeRemaining(targetIST);
@@ -502,7 +502,7 @@ export default function MaintenancePage() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-[#0f172a] text-white font-sans">
       <h1 className="text-3xl sm:text-4xl font-bold mb-4">🔧 Under Maintenance</h1>
-      <p className="text-lg sm:text-xl mb-6">We&apos;ll be back by 4 PM IST:</p>
+      <p className="text-lg sm:text-xl mb-6">We&apos;ll be back by 6 PM IST:</p>
       <div className="bg-black px-6 py-4 rounded-lg text-2xl sm:text-3xl font-mono">
         {timeLeft.hours}h : {timeLeft.minutes}m : {timeLeft.seconds}s
       </div>
