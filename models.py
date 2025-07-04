@@ -23,13 +23,12 @@ class ProductKeyIn(BaseModel):
 class VerifyRequest(BaseModel):
     email: str
     otp: str
-    salt: str       
-    verifier: str 
+    password: str  # Used to generate SRP verifier
     
 class EmailRequest(BaseModel):
     email: str
     
 class SRPVerifyRequest(BaseModel):
     email: str
-    clientEphemeralPublic: str  # A
-    clientSessionProof: str     # M1
+    clientEphemeralPublic: str  # A (hex)
+    clientSessionProof: str     # M1 (hex)
