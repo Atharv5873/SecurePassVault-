@@ -125,6 +125,7 @@ def srp_verify(data: SRPVerifyRequest):
         )
 
     try:
+        # Debug logs for tracing values
         print("=== SRP VERIFY DEBUG ===")
         print(f"Email: {email}")
         print(f"Salt (base64): {session['salt']}")
@@ -133,15 +134,16 @@ def srp_verify(data: SRPVerifyRequest):
         print(f"A (clientEphemeralPublic): {data.clientEphemeralPublic}")
         print(f"M1 (clientSessionProof): {data.clientSessionProof}")
 
-        # Decode everything
-        salt_bytes = base64.b64decode(session["salt"])
-        verifier_bytes = bytes.fromhex(session["verifier"])
-        A = bytes.fromhex(data.clientEphemeralPublic)
-        M1 = bytes.fromhex(data.clientSessionProof)
-        b_int = int(session["b"], 16)  # server secret ephemeral private key as int
+        # Decode necessary values from storage/request
+        salt_bytes = base64.b64decode(session["salt"])  # (Not used for Verifier here)
+        verifier_bytes = bytes.fromhex(session["verifier"])  # stored verifier
+        A = bytes.fromhex(data.clientEphemeralPublic)         # client ephemeral public
+        M1 = bytes.fromhex(data.clientSessionProof)           # client proof M1
+        b = bytes.fromhex(session["b"])                        # server private ephemeral secret
 
-        # Construct Verifier with correct params: (username, salt, verifier, A, b)
-        server = srp.Verifier(email, salt_bytes, verifier_bytes, A, b_int)
+        # Correct Verifier initialization for verification step:
+        # Parameters: username, verifier, A, b
+        server = srp.Verifier(email, verifier_bytes, A, b)
 
         # Verify client proof M1
         HAMK = server.verify_session(M1)
@@ -151,11 +153,11 @@ def srp_verify(data: SRPVerifyRequest):
                 detail="Client proof invalid"
             )
 
-        # Create JWT token
+        # Create JWT access token
         user = users_collection.find_one({"username": email})
         token = create_access_token({"user_id": str(user["_id"])})
 
-        # Clear session
+        # Clear the SRP session after successful verification
         srp_sessions.delete_one({"email": email})
 
         return {
@@ -170,3 +172,4 @@ def srp_verify(data: SRPVerifyRequest):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="SRP verification failed"
         )
+
