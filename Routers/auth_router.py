@@ -7,6 +7,7 @@ from starlette import status
 from db_config import db
 from pymongo import ReturnDocument
 import srp, base64, time
+import srp, base64, time, traceback
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 users_collection = db["users"]
@@ -111,30 +112,59 @@ def srp_verify(data: SRPVerifyRequest):
     session = srp_sessions.find_one({"email": email})
 
     if not session:
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, "No SRP challenge started or session expired")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No SRP challenge started or session expired"
+        )
 
     # Expire session if older than 5 minutes
     if time.time() - session["timestamp"] > 300:
         srp_sessions.delete_one({"email": email})
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, "SRP session expired")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="SRP session expired"
+        )
 
     try:
+        # Debug logs
+        print("=== SRP VERIFY DEBUG ===")
+        print(f"Email: {email}")
+        print(f"Salt (base64): {session['salt']}")
+        print(f"Verifier (hex): {session['verifier']}")
+        print(f"B (hex): {session['B']}")
+        print(f"A (clientEphemeralPublic): {data.clientEphemeralPublic}")
+        print(f"M1 (clientSessionProof): {data.clientSessionProof}")
+
+        # Decode everything
         salt_bytes = base64.b64decode(session["salt"])
         verifier_bytes = bytes.fromhex(session["verifier"])
         A = bytes.fromhex(data.clientEphemeralPublic)
-        client_M = bytes.fromhex(data.clientSessionProof)
+        M1 = bytes.fromhex(data.clientSessionProof)
         B = bytes.fromhex(session["B"])
 
-        server = srp.Verifier(email, salt_bytes, verifier_bytes, A, B)
-        HAMK = server.verify_session(client_M)
+        # ✅ Pass all arguments explicitly
+        server = srp.Verifier(
+            username=email,
+            salt=salt_bytes,
+            verifier=verifier_bytes,
+            A=A,
+            B=B,
+            hash_alg="SHA256"  # ensure consistent hashing
+        )
 
+        # Verify session
+        HAMK = server.verify_session(M1)
         if not HAMK:
-            raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Client proof invalid")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Client proof invalid"
+            )
 
+        # Create JWT token
         user = users_collection.find_one({"username": email})
         token = create_access_token({"user_id": str(user["_id"])})
 
-        # Clear session after use
+        # Clear session
         srp_sessions.delete_one({"email": email})
 
         return {
@@ -143,4 +173,9 @@ def srp_verify(data: SRPVerifyRequest):
         }
 
     except Exception as e:
-        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, f"SRP verification failed: {str(e)}")
+        print("=== SRP VERIFY EXCEPTION ===")
+        traceback.print_exc()  # Logs full traceback
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="SRP verification failed"
+        )
