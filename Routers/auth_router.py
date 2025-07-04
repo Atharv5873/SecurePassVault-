@@ -137,6 +137,13 @@ def srp_verify(data: SRPVerifyRequest):
         A = bytes.fromhex(client_A_hex)
         M1 = bytes.fromhex(client_M1_hex)
 
+        print("Verifier bytes (hex):", verifier_bytes.hex())
+print("Salt bytes (hex):", salt_bytes.hex())
+print("A (client ephemeral):", A.hex())
+print("B (server ephemeral):", B_hex)
+print("s (SRP salt):", s_hex)
+
+
         server = srp.Verifier(
             username=email,
             salt=salt_bytes,
@@ -146,6 +153,11 @@ def srp_verify(data: SRPVerifyRequest):
             s=bytes.fromhex(s_hex),
             hash_alg="SHA256"  # ✅ FIXED
         )
+
+        if not isinstance(M1, bytes):
+    print("⚠️ M1 is not bytes. Type:", type(M1))
+    raise HTTPException(status.HTTP_400_BAD_REQUEST, "M1 must be bytes")
+
 
         HAMK = server.verify_session(M1)
         if HAMK is None:
