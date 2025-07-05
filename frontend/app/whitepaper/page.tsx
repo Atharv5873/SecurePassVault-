@@ -76,7 +76,7 @@ const WhitepaperPage = () => {
             <section className="mb-10">
                 <h2 className="text-2xl font-semibold mb-2">Encryption</h2>
                 <p className="text-gray-300 mb-2">
-                    After authentication, we derive a strong encryption key from your password and salt using PBKDF2 or Argon2 in the browser.
+                    After authentication, we derive a strong encryption key from your password and salt using PBKDF2 in the browser.
                 </p>
                 <ul className="list-disc pl-6 text-gray-300">
                     <li>Passwords and product keys are encrypted in the browser before being sent to the server.</li>

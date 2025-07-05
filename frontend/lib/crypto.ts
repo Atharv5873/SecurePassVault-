@@ -1,18 +1,30 @@
 'use client';
+
+import { scrypt } from 'scrypt-js';
+
 export async function deriveKey(password: string, salt: Uint8Array): Promise<CryptoKey> {
     if (typeof window === 'undefined' || !window.crypto?.subtle) {
         throw new Error("Web Crypto API not supported or running in non-browser environment.");
-      }
-    const enc = new TextEncoder();
-    const baseKey = await crypto.subtle.importKey(
-        'raw', enc.encode(password), { name: 'PBKDF2' }, false, ['deriveKey']
-    );
-    return crypto.subtle.deriveKey(
-        { name: 'PBKDF2', salt, iterations: 100000, hash: 'SHA-256' },
-        baseKey,
-        { name: 'AES-GCM', length: 256 }, true, ['encrypt', 'decrypt']
+    }
+
+    const N = 2 ** 15; // 32768 — high but still OK in browsers
+    const r = 8;       // Block size
+    const p = 1;       // Parallelization
+    const dkLen = 32;  // AES-256 => 32 bytes
+
+    const passwordBytes = new TextEncoder().encode(password);
+
+    const derivedKeyBytes = await scrypt(passwordBytes, salt, N, r, p, dkLen);
+
+    return crypto.subtle.importKey(
+        'raw',
+        new Uint8Array(derivedKeyBytes),
+        { name: 'AES-GCM' },
+        false,
+        ['encrypt', 'decrypt']
     );
 }
+
 
 export async function encryptData(key: CryptoKey, data: string): Promise<string> {
     const iv = crypto.getRandomValues(new Uint8Array(12));
