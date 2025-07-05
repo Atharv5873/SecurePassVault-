@@ -313,7 +313,15 @@ export default function Home() {
             </div>
           </section>
         </div>
-
+        {/* Bottom links */}
+        <Link href="/why" className="hover:text-white transition-colors duration-200 mr-4">
+          Why SecurePass Vault?
+        </Link>
+        <div className="absolute bottom-4 sm:bottom-6 lg:bottom-8 left-1/2 transform -translate-x-1/2 text-gray-400 text-xs sm:text-sm">
+            <Link href="/whitepaper" className="hover:text-white transition-colors duration-200">
+              Read our Whitepaper
+            </Link>
+        </div>
         {/* Top-right logo */}
         <div className="absolute top-2 sm:top-4 lg:top-8 right-2 sm:right-4 lg:right-12 z-20">
           <a

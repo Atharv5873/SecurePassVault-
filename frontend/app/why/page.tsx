@@ -53,13 +53,15 @@ const WhyUs = () => {
             <h1 className="text-4xl md:text-5xl font-bold mb-6 text-center text-[color:var(--neon)]">
                 Why SecurePass Vault?
             </h1>
+            <br />
+            <br />
 
             <div className="max-w-5xl mx-auto space-y-10">
                 <section>
-                    <h2 className="text-2xl font-semibold text-teal-400 mb-2">🔐 True Zero-Knowledge Authentication</h2>
+                    <h2 className="text-2xl font-semibold text-teal-400 mb-2">🔐 Secure Authentication</h2>
                     <p className="text-gray-300">
                         Unlike Google or browser-based managers, SecurePass Vault never sees or stores your actual password.
-                        We use the Secure Remote Password (SRP) protocol which means **authentication happens without sending plaintext** to the server—making it immune to leaks or breaches.
+                        We use the hash-based authentication method which means <strong>authentication happens without sending plaintext</strong> to the server—making it immune to leaks or breaches.
                     </p>
                 </section>
 
@@ -67,7 +69,7 @@ const WhyUs = () => {
                     <h2 className="text-2xl font-semibold text-teal-400 mb-2">🧠 You&apos;re in Control</h2>
                     <p className="text-gray-300">
                         Browser managers often sync credentials across devices and cloud services automatically. While convenient, this also means they&apos;re vulnerable if your Google account or browser is compromised.
-                        SecurePass Vault puts **you in full control**, without automatic syncing or exposure to third-party services.
+                        SecurePass Vault puts <strong>you in full control</strong>, without automatic syncing or exposure to third-party services.
                     </p>
                 </section>
 
@@ -88,7 +90,7 @@ const WhyUs = () => {
                 <section>
                     <h2 className="text-2xl font-semibold text-teal-400 mb-2">💥 Lightweight & Fast</h2>
                     <p className="text-gray-300">
-                        SecurePass Vault is built using modern frameworks with no bloated dependencies. It loads fast, works offline-first, and uses **client-side decryption** to keep your data local and secure.
+                        SecurePass Vault is built using modern frameworks with no bloated dependencies. It loads fast, works offline-first, and uses <strong>client-side decryption</strong> to keep your data local and secure.
                     </p>
                 </section>
 

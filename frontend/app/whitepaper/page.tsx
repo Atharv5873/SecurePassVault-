@@ -61,27 +61,27 @@ const WhitepaperPage = () => {
             </section>
 
             <section className="mb-10">
-                <h2 className="text-2xl font-semibold mb-2">Zero-Knowledge Authentication (SRP)</h2>
+                <h2 className="text-2xl font-semibold mb-2">Secure Authentication </h2>
                 <p className="text-gray-300 mb-2">
-                    Our authentication mechanism is powered by the Secure Remote Password (SRP) protocol — a zero-knowledge proof system. This means:
+                    Our authentication mechanism is powered by the scrypt hashing. This means:
                 </p>
                 <ul className="list-disc pl-6 text-gray-300">
-                    <li>Your password is never sent to the server — not even hashed.</li>
-                    <li>We store a one-time cryptographic verifier generated from your password and a random salt.</li>
+                    <li>Your password is never sent to the server — just the hash</li>
+                    <li>We store a one-time cryptographic hash generated from your password and a random salt.</li>
                     <li>Login proves you know your password without revealing it.</li>
-                    <li>No attacker (even us) can reverse-engineer your password from the verifier.</li>
+                    <li>No attacker (even us) can reverse-engineer your password from the hash.</li>
                 </ul>
             </section>
 
             <section className="mb-10">
                 <h2 className="text-2xl font-semibold mb-2">Encryption</h2>
                 <p className="text-gray-300 mb-2">
-                    After authentication, we derive a strong encryption key from your password and salt using PBKDF2 in the browser.
+                    After authentication, we derive a strong encryption key from your password and salt using scrypt in the browser.
                 </p>
                 <ul className="list-disc pl-6 text-gray-300">
-                    <li>Passwords and product keys are encrypted in the browser before being sent to the server.</li>
+                    <li>Passwords, product keys, Note content, and API keys are encrypted in the browser before being sent to the server.</li>
                     <li>We use AES-256-GCM for symmetric encryption, ensuring both confidentiality and integrity.</li>
-                    <li>Decryption also happens only in the browser. The server stores only ciphertext.</li>
+                    <li>Decryption also happens only in the browser. The server stores only second-layer ciphertext.</li>
                 </ul>
                 <p className="text-gray-300 mt-2 italic">
                     This means even if our server is compromised, your data remains secure.
@@ -94,8 +94,8 @@ const WhitepaperPage = () => {
                     Encrypted credentials are stored in a secure MongoDB backend. Each record includes:
                 </p>
                 <ul className="list-disc pl-6 text-gray-300">
-                    <li><strong>Site name</strong> and <strong>username</strong> (encrypted)</li>
-                    <li><strong>Password or product key</strong> (encrypted)</li>
+                        <li><strong>Site name</strong>, <strong>username</strong>, <strong>title</strong>, <strong>service name</strong>, <strong>product name</strong>, <strong>description</strong></li>
+                    <li><strong>Password, product key, note content, api key</strong> (encrypted)</li>
                     <li>Metadata such as timestamps and optional labels</li>
                 </ul>
             </section>
@@ -103,7 +103,7 @@ const WhitepaperPage = () => {
             <section className="mb-10">
                 <h2 className="text-2xl font-semibold mb-2">Session Security</h2>
                 <p className="text-gray-300">
-                    After SRP login, we issue a short-lived access token. Encryption keys are stored securely in sessionStorage — never persisted or reused across devices.
+                    After successful login, we issue a short-lived access token. Encryption keys are stored securely in sessionStorage — never persisted or reused across devices.
                 </p>
             </section>
 
@@ -114,7 +114,7 @@ const WhitepaperPage = () => {
                 </p>
                 <ul className="list-disc pl-6 text-gray-300">
                     <li>Log your master password</li>
-                    <li>Store unencrypted data</li>
+                    <li>Store unencrypted sensitive data</li>
                     <li>Sell or share your data</li>
                 </ul>
                 <p className="text-gray-300 mt-2">
