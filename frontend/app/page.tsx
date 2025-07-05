@@ -133,6 +133,7 @@ export default function Home() {
 
       if (meRes.ok) {
         const meData = await meRes.json();
+        // eslint-disable-next-line @typescript-eslint/no-unused-expressions
         meData.is_admin ? router.push('/admin') : router.push('/vault');
       } else {
         router.push('/vault');
@@ -336,7 +337,7 @@ export default function Home() {
       {(showLoginModal || showRegisterModal) && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
           {showLoginModal && (
-            <div className="bg-[#181c1b] p-8 w-full max-w-md rounded-lg shadow-xl relative z-50">
+            <div className="bg-gradient-to-br from-gray-850 via-gray-900 to-gray-800 p-8 w-full max-w-md rounded-lg shadow-xl relative z-50">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-2xl font-bold neon-text">Login</h2>
                 <button onClick={() => setShowLoginModal(false)} className="text-gray-400 hover:text-white text-2xl">&times;</button>
@@ -377,13 +378,14 @@ export default function Home() {
           )}
 
           {showRegisterModal && (
-            <div className="bg-[#181c1b] p-8 w-full max-w-md rounded-lg shadow-xl relative z-50">
+            <div className="bg-gradient-to-br from-gray-850 via-gray-900 to-gray-800 p-8 w-full max-w-md rounded-lg shadow-xl relative z-50">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-2xl font-bold neon-text">Register</h2>
                 <button onClick={() => setShowRegisterModal(false)} className="text-gray-400 hover:text-white text-2xl">&times;</button>
               </div>
               <form onSubmit={handleRegister} className="flex flex-col space-y-4">
                 <div className="space-y-4">
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Email</label>
                   <input
                     type="email"
                     value={email}

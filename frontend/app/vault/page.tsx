@@ -4,16 +4,19 @@ import { useRouter } from 'next/navigation';
 import VaultForm from '@/components/vaultform';
 import VaultDisplay from '@/components/VaultDisplay';
 import LogoutButton from '@/components/logoutbutton';
-import type { LicenseEntry, VaultEntry } from '../types/vault';
+import type { ApiEntry, LicenseEntry, NoteEntry, VaultEntry } from '../types/vault';
 import Image from 'next/image';
 import { useCrypto } from '@/contexts/cryptocontext';
 import PasswordChecker from '@/components/passwordchecker';
 import License from '@/components/licenseForm';
+import NoteForm from '@/components/noteForm';
+import Api from '@/components/apiForm';
+import { Code, Gauge, Key, KeyRound, Plus, StickyNote } from 'lucide-react';
 
 export default function VaultPage() {
     const [token, setToken] = useState<string | null>(null);
-    const [entries, setEntries] = useState<(VaultEntry | LicenseEntry)[]>([]);
-    const [activeTab, setActiveTab] = useState<'vault' | 'add' | 'pw' | 'addkey'>('vault');
+    const [entries, setEntries] = useState<(VaultEntry | LicenseEntry | NoteEntry | ApiEntry)[]>([]);
+    const [activeTab, setActiveTab] = useState<'vault' | 'add' | 'pw' | 'addkey'| 'addnote'|'addapi'>('vault');
     const [entriesLoaded, setEntriesLoaded] = useState(false);
     const [userEmail, setUserEmail] = useState<string>('');
     const router = useRouter();
@@ -54,12 +57,12 @@ export default function VaultPage() {
         return () => clearInterval(interval);
     }, [router]);
 
-    const handleNewEntry = (newEntry: VaultEntry | LicenseEntry) => {
+    const handleNewEntry = (newEntry: VaultEntry | LicenseEntry|NoteEntry|ApiEntry) => {
         setEntries((prev) => [...prev, newEntry]);
         setActiveTab('vault');
     };
 
-    const handleEntriesLoaded = (loadedEntries: (VaultEntry | LicenseEntry)[]) => {
+    const handleEntriesLoaded = (loadedEntries: (VaultEntry | LicenseEntry | NoteEntry | ApiEntry)[]) => {
         setEntries(loadedEntries);
         setEntriesLoaded(true);
     };
@@ -103,41 +106,71 @@ export default function VaultPage() {
                                 onClick={() => setActiveTab('vault')}
                                 className={`w-full text-left px-4 py-3 rounded-lg transition-all duration-200 flex items-center space-x-3 ${activeTab === 'vault' ? 'bg-[color:var(--neon)]/20 border border-[color:var(--neon)]/40 neon-text' : 'text-gray-300 hover:bg-gray-800/50 hover:text-white'}`}
                             >
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                                <svg
+                                    className="w-6 h-6 text-currentColor"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                    strokeWidth={1.8}
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                >
+                                    {/* Vault body */}
+                                    <rect x="3" y="5" width="14" height="14" rx="2" ry="2" />
+
+                                    {/* Door outline (open, on the right) */}
+                                    <path d="M17 5v14l4-2V7l-4-2z" />
+
+                                    {/* Central dial */}
+                                    <circle cx="10" cy="12" r="1.5" />
+                                    <line x1="10" y1="12" x2="12.5" y2="12" />
+                                    <line x1="10" y1="12" x2="9" y2="14" />
                                 </svg>
+
                                 <span>My Vault</span>
                             </button>
                             <button
                                 onClick={() => setActiveTab('add')}
                                 className={`w-full text-left px-4 py-3 rounded-lg transition-all duration-200 flex items-center space-x-3 ${activeTab === 'add' ? 'bg-[color:var(--neon)]/20 border border-[color:var(--neon)]/40 neon-text' : 'text-gray-300 hover:bg-gray-800/50 hover:text-white'}`}
                             >
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                                </svg>
+                                <Key className="w-5 h-5 text-currentColor" />
                                 <span>Add Credential</span>
                             </button>
                             <button
                                 onClick={() => setActiveTab('addkey')}
                                 className={`w-full text-left px-4 py-3 rounded-lg transition-all duration-200 flex items-center space-x-3 ${activeTab === 'addkey' ? 'bg-[color:var(--neon)]/20 border border-[color:var(--neon)]/40 neon-text' : 'text-gray-300 hover:bg-gray-800/50 hover:text-white'}`}
                             >
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                                </svg>
+                                <div className="relative w-6 h-6 text-currentColor">
+                                    <KeyRound className="absolute inset-0 w-auto h-auto" strokeWidth={1.5} />
+                                    <Plus className="absolute text-white inset-0 w-4 h-4 m-auto" strokeWidth={2} />
+                                </div>
                                 <span>Add Product Key</span>
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('addnote')}
+                                className={`w-full text-left px-4 py-3 rounded-lg transition-all duration-200 flex items-center space-x-3 ${activeTab === 'addnote' ? 'bg-[color:var(--neon)]/20 border border-[color:var(--neon)]/40 neon-text' : 'text-gray-300 hover:bg-gray-800/50 hover:text-white'}`}
+                            >
+                                <div className="relative w-6 h-6 text-currentColor">
+                                    <StickyNote className="absolute inset-0 w-auto h-auto" strokeWidth={1.5} />
+                                    <Plus className="absolute text-white inset-0 w-4 h-4 m-auto" strokeWidth={2} />
+                                </div>
+                                <span>Add a Secret Note</span>
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('addapi')}
+                                className={`w-full text-left px-4 py-3 rounded-lg transition-all duration-200 flex items-center space-x-3 ${activeTab === 'addapi' ? 'bg-[color:var(--neon)]/20 border border-[color:var(--neon)]/40 neon-text' : 'text-gray-300 hover:bg-gray-800/50 hover:text-white'}`}
+                            >
+                                <div className="relative w-6 h-6 text-currentColor">
+                                    <Code className="absolute inset-0 w-auto h-auto" strokeWidth={1.5} />
+                                    <Plus className="absolute text-white inset-0 w-4 h-4 m-auto" strokeWidth={2} />
+                                </div>
+                                <span>Add API Key</span>
                             </button>
                             <button
                                 onClick={() => setActiveTab('pw')}
                                 className={`w-full text-left px-4 py-3 rounded-lg transition-all duration-200 flex items-center space-x-3 ${activeTab === 'pw' ? 'bg-[color:var(--neon)]/20 border border-[color:var(--neon)]/40 neon-text' : 'text-gray-300 hover:bg-gray-800/50 hover:text-white'}`}
                             >
-                                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-white-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M15 7a4 4 0 10-2.93 6.81L6 20h3v-3h3v-3h3.07A4.002 4.002 0 0015 7z"
-                                    />
-                                </svg>
+                                <Gauge className="w-6 h-6 text-currentColor" />
                                 <span>Check Password Strength</span>
                             </button>
                         </div>
@@ -161,16 +194,18 @@ export default function VaultPage() {
             </div>
 
             {/* Main content */}
-            <div className="flex-1 lg:ml-80 min-h-screen overflow-y-auto bg-[#0d0e10] flex flex-col">
-                <header className="bg-[#181c1b]/50 backdrop-blur-sm border-b border-[color:var(--neon)]/20 p-4 lg:p-6">
+            <div className="flex-1 lg:ml-80 min-h-screen overflow-y-auto bg-gradient-to-br from-black via-gray-950 to-gray-900 flex flex-col">
+                <header className="bg-gradient-to-br from-black via-gray-900 to-gray-950/50 backdrop-blur-sm border-b border-[color:var(--neon)]/20 p-4 lg:p-6">
                     <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
                         <div>
                             <h2 className="text-xl lg:text-2xl font-bold">
                                 {{
                                     vault: 'My Secure Vault',
-                                    add: 'Add New Entry',
+                                    add: 'Add New Credental',
                                     addkey: 'Add Product Key',
                                     pw: 'Password Strength Checker',
+                                    addnote: 'Add Secret Note',
+                                    addapi: 'Add API Key'
                                 }[activeTab]}
                             </h2>
                             <p className="text-gray-400 text-sm">
@@ -179,9 +214,13 @@ export default function VaultPage() {
                                         ? `${entries.length} entries stored securely`
                                         : 'Loading entries...'
                                     : activeTab === 'add'
-                                        ? 'Create a new secure entry'
+                                        ? 'Create a new secure password entry'
                                         : activeTab === 'addkey'
                                             ? 'Store product license keys securely'
+                                            : activeTab === 'addnote'
+                                                ? 'Add a secret note to your vault'
+                                                : activeTab === 'addapi'
+                                                ? 'Store API keys securely'
                                             : 'Check the strength of your passwords'}
                             </p>
                         </div>
@@ -203,14 +242,26 @@ export default function VaultPage() {
                             />
                         ) : activeTab === 'add' ? (
                             <div className="max-w-2xl mx-auto">
-                                <div className="bg-[#181c1b] border border-[color:var(--neon)]/30 rounded-2xl p-6 lg:p-8 shadow-xl">
+                                <div className="bg-gradient-to-br from-black via-gray-900 to-gray-950 border border-[color:var(--neon)]/30 rounded-2xl p-6 lg:p-8 shadow-xl">
                                     <VaultForm userToken={token} onNewEntry={handleNewEntry} />
                                 </div>
                             </div>
                         ) : activeTab === 'addkey' ? (
                             <div className="max-w-2xl mx-auto">
-                                <div className="bg-[#181c1b] border border-[color:var(--neon)]/30 rounded-2xl p-6 lg:p-8 shadow-xl">
+                                <div className="bg-gradient-to-br from-black via-gray-900 to-gray-950 border border-[color:var(--neon)]/30 rounded-2xl p-6 lg:p-8 shadow-xl">
                                     <License userToken={token} onNewEntry={handleNewEntry} />
+                                </div>
+                            </div>
+                        ) : activeTab === 'addnote' ? (
+                            <div className="max-w-2xl mx-auto">
+                                <div className="bg-gradient-to-br from-black via-gray-900 to-gray-950 border border-[color:var(--neon)]/30 rounded-2xl p-6 lg:p-8 shadow-xl">
+                                    <NoteForm userToken={token} onNewEntry={handleNewEntry} />
+                                </div>
+                            </div>
+                        ) : activeTab === 'addapi' ? (
+                            <div className="max-w-2xl mx-auto">
+                                <div className="bg-gradient-to-br from-black via-gray-900 to-gray-950 border border-[color:var(--neon)]/30 rounded-2xl p-6 lg:p-8 shadow-xl">
+                                    <Api userToken={token} onNewEntry={handleNewEntry} />
                                 </div>
                             </div>
                         ) : (

@@ -4,25 +4,8 @@ import { Copy, Eye, EyeOff, Trash2, ChevronDown, ChevronUp, ChevronRight } from 
 import toast from 'react-hot-toast';
 import { useCrypto } from '@/contexts/cryptocontext';
 import { decryptData } from '@/lib/crypto';
+import { VaultEntry,LicenseEntry, NoteEntry, ApiEntry, VaultDisplayProps} from '@/app/types/vault';
 
-type VaultEntry = {
-    id: string;
-    site: string;
-    username: string;
-};
-
-type LicenseEntry = {
-    id: string;
-    product_name: string;
-    description: string;
-};
-
-type VaultDisplayProps = {
-    userToken: string;
-    entries: (VaultEntry | LicenseEntry)[];
-    setEntries: React.Dispatch<React.SetStateAction<(VaultEntry | LicenseEntry)[]>>;
-    onEntriesLoaded?: (loadedEntries: (VaultEntry | LicenseEntry)[]) => void;
-};
 
 export default function VaultDisplay({
     userToken,
@@ -38,6 +21,8 @@ export default function VaultDisplay({
     const [searchTerm, setSearchTerm] = useState('');
     const [showPasswords, setShowPasswords] = useState(true);
     const [showKeys, setShowKeys] = useState(true);
+    const [showNotes, setShowNotes] = useState(true);
+    const [showApiKeys, setShowApiKeys] = useState(true);
 
     const setEntriesRef = useRef(setEntries);
     const onEntriesLoadedRef = useRef(onEntriesLoaded);
@@ -57,25 +42,35 @@ export default function VaultDisplay({
 
         const fetchEntries = async () => {
             try {
-                const [resCredentials, resProducts] = await Promise.all([
+                const [resCredentials, resProducts, resNotes, resApiKeys] = await Promise.all([
                     fetch(`/credentials`, {
                         headers: { Authorization: `Bearer ${userToken}` },
                     }),
                     fetch(`https://securepassvault-1.onrender.com/products/`, {
                         headers: { Authorization: `Bearer ${userToken}` },
                     }),
+                    fetch(`https://securepassvault-1.onrender.com/notes/`, {
+                        headers: { Authorization: `Bearer ${userToken}` },
+                    }),
+                    fetch(`https://securepassvault-1.onrender.com/api-keys/`, {
+                        headers: { Authorization: `Bearer ${userToken}` },
+                    }),
                 ]);
 
-                if (!resCredentials.ok || !resProducts.ok) {
+                if (!resCredentials.ok || !resProducts.ok || !resNotes.ok|| !resApiKeys.ok) {
                     const errCredentials = await resCredentials.json().catch(() => ({}));
                     const errProducts = await resProducts.json().catch(() => ({}));
+                    const errNotes = await resNotes.json().catch(() => ({}));
+                    const errApiKeys = await resApiKeys.json().catch(() => ({}));
                     throw new Error(errCredentials?.detail || errProducts?.detail || 'Failed to fetch entries');
                 }
 
                 const dataCredentials = await resCredentials.json();
                 const dataProducts = await resProducts.json();
+                const dataNotes = await resNotes.json();
+                const dataApiKeys = await resApiKeys.json();
 
-                const combined: (VaultEntry | LicenseEntry)[] = [...dataCredentials, ...dataProducts];
+                const combined: (VaultEntry | LicenseEntry | NoteEntry | ApiEntry)[] = [...dataCredentials, ...dataProducts, ...dataNotes, ...dataApiKeys];
                 setEntriesRef.current(combined);
                 setHasLoaded(true);
                 onEntriesLoadedRef.current?.(combined);
@@ -103,7 +98,7 @@ export default function VaultDisplay({
             const encrypted: string | undefined =
                 typeof json === 'string'
                     ? json
-                    : json.password || json.license_key || json.key || json.license;
+                    : json.password || json.license_key || json.key || json.license || json.content || json.api_key;
 
             if (!encrypted) throw new Error('No encrypted field in response.');
 
@@ -141,9 +136,18 @@ export default function VaultDisplay({
         if (!confirm('Are you sure?')) return;
 
         try {
-            const endpoint = isPassword
-                ? `/credentials/delete/${id}`
-                : `https://securepassvault-1.onrender.com/products/delete/${id}`;
+            let endpoint = '';
+            if (isPassword) {
+                endpoint = `/credentials/delete/${id}`;
+            } else if (entries.some(e => e.id === id && 'product_name' in e)) {
+                endpoint = `https://securepassvault-1.onrender.com/products/delete/${id}`;
+            } else if (entries.some(e => e.id === id && 'title' in e)) {
+                endpoint = `https://securepassvault-1.onrender.com/notes/${id}`;
+            } else if (entries.some(e => e.id === id && 'service_name' in e)) {
+                endpoint = `https://securepassvault-1.onrender.com/api-keys/delete/${id}`;
+            } else {
+                throw new Error('Unknown entry type for deletion');
+            }
 
             const res = await fetch(endpoint, {
                 method: 'DELETE',
@@ -173,6 +177,20 @@ export default function VaultDisplay({
         )
         .sort((a, b) => a.product_name.localeCompare(b.product_name));
 
+    const filteredNotes = entries
+        .filter((e): e is NoteEntry => 'title' in e)
+        .filter((e) =>
+            `${e.title}`.toLowerCase().includes(searchTerm.toLowerCase())
+        )
+        .sort((a, b) => a.title.localeCompare(b.title));
+    
+    const filteredApiKeys = entries
+        .filter((e): e is ApiEntry => 'service_name'in e && 'description' in e)
+        .filter((e) =>
+            `${e.service_name} ${e.description || ''}`.toLowerCase().includes(searchTerm.toLowerCase())
+        )
+        .sort((a, b) => a.service_name.localeCompare(b.service_name));
+
     return (
         <div className="mt-6 max-w-2xl mx-auto w-full">
             <input
@@ -198,7 +216,7 @@ export default function VaultDisplay({
                             const expanded = expandedId === entry.id;
                             const visibleVal = visible.has(entry.id);
                             return (
-                                <li key={entry.id} className="rounded-xl bg-white/5 p-4 shadow">
+                                <li key={entry.id} className="rounded-xl bg-gradient-to-br from-gray-800 via-gray-900 to-gray-800 p-4 shadow">
                                     <div
                                         className="cursor-pointer flex justify-between items-center"
                                         onClick={() => {
@@ -256,7 +274,7 @@ export default function VaultDisplay({
                             const expanded = expandedId === entry.id;
                             const visibleVal = visible.has(entry.id);
                             return (
-                                <li key={entry.id} className="rounded-xl bg-white/5 p-4 shadow">
+                                <li key={entry.id} className="rounded-xl bg-gradient-to-br from-gray-800 via-gray-900 to-gray-800 p-4 shadow">
                                     <div
                                         className="cursor-pointer flex justify-between items-center"
                                         onClick={() => {
@@ -298,6 +316,121 @@ export default function VaultDisplay({
                     </ul>
                 ) : showKeys && <p className="text-gray-400">No product keys found.</p>}
             </div>
+            {/* Notes Section */}
+            <div className="mt-6">
+                <button
+                    className="flex items-center gap-2 text-lg font-semibold text-white mb-2"
+                    onClick={() => setShowNotes((p) => !p)}
+                >
+                    {showNotes ? <ChevronDown /> : <ChevronRight />}
+                    Notes
+                </button>
+                {showNotes && filteredNotes.length > 0 ? (
+                    <ul className="space-y-4">
+                        {filteredNotes.map((entry) => {
+                            const expanded = expandedId === entry.id;
+                            return (
+                                <li key={entry.id} className="rounded-xl bg-gradient-to-br from-gray-800 via-gray-900 to-gray-800 p-4 shadow">
+                                    <div
+                                        className="cursor-pointer flex justify-between items-center"
+                                        onClick={() => {
+                                            setExpandedId(expanded ? null : entry.id);
+                                            if (!decryptedData[entry.id]) {
+                                                reveal(entry.id, `https://securepassvault-1.onrender.com/notes/${entry.id}`);
+                                            }
+                                        }}
+                                    >
+                                        <div>
+                                            <p className="font-medium neon-text">{entry.title}</p>
+                                        </div>
+                                        {expanded ? <ChevronUp /> : <ChevronDown />}
+                                    </div>
+                                    {expanded && (
+                                        <div className="mt-2">
+                                            <label className="text-xs text-gray-400">Content</label>
+                                            <p className="text-base text-white break-words whitespace-pre-wrap">
+                                                {visible.has(entry.id)
+                                                    ? (decryptedData[entry.id] || '[Reveal failed]')
+                                                    : '••••••••'}
+                                            </p>
+                                            <div className="flex gap-2 mt-2">
+                                                <button onClick={() => toggleVisibility(entry.id)}>
+                                                    {visible.has(entry.id) ? <EyeOff size={16} /> : <Eye size={16} />}
+                                                </button>
+                                                <button onClick={() => handleCopy(entry.id)}><Copy size={16} /></button>
+                                                <button
+                                                    onClick={() => handleDelete(entry.id, false)}
+                                                    className="text-red-500"
+                                                >
+                                                    <Trash2 size={16} />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </li>
+                            );
+                        })}
+                    </ul>
+                ) : showNotes && <p className="text-gray-400">No notes found.</p>}
+                </div>
+
+            {/* API Keys Section */}
+            <div className="mt-6">
+                <button
+                    className="flex items-center gap-2 text-lg font-semibold text-white mb-2"
+                    onClick={() => setShowApiKeys((p) => !p)}
+                >
+                    {showApiKeys ? <ChevronDown /> : <ChevronRight />}
+                    API Keys
+                </button>
+                {showApiKeys && filteredApiKeys.length > 0 ? (
+                    <ul className="space-y-4">
+                        {filteredApiKeys.map((entry) => {
+                            const expanded = expandedId === entry.id;
+                            const visibleVal = visible.has(entry.id);
+                            return (
+                                <li key={entry.id} className="rounded-xl bg-gradient-to-br from-gray-800 via-gray-900 to-gray-800 p-4 shadow">
+                                    <div
+                                        className="cursor-pointer flex justify-between items-center"
+                                        onClick={() => {
+                                            setExpandedId(expanded ? null : entry.id);
+                                            if (!decryptedData[entry.id]) {
+                                                reveal(entry.id, `https://securepassvault-1.onrender.com/api-keys/reveal/${entry.id}`);
+                                            }
+                                        }}
+                                    >
+                                        <div>
+                                            <p className="font-medium neon-text">{entry.service_name}</p>
+                                            <p className="text-gray-400 text-sm">{entry.description}</p>
+                                        </div>
+                                        {expanded ? <ChevronUp /> : <ChevronDown />}
+                                    </div>
+                                    {expanded && (
+                                        <div className="mt-2">
+                                            <label className="text-xs text-gray-400">API Key</label>
+                                            <p className="text-base text-white break-all">
+                                                {visibleVal ? decryptedData[entry.id] || '••••••••' : '••••••••'}
+                                            </p>
+                                            <div className="flex gap-2 mt-2">
+                                                <button onClick={() => toggleVisibility(entry.id)}>
+                                                    {visibleVal ? <EyeOff size={16} /> : <Eye size={16} />}
+                                                </button>
+                                                <button onClick={() => handleCopy(entry.id)}><Copy size={16} /></button>
+                                                <button
+                                                    onClick={() => handleDelete(entry.id, false)}
+                                                    className="text-red-500"
+                                                >
+                                                    <Trash2 size={16} />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </li>
+                            );
+                        })}
+                    </ul>
+                ) : showApiKeys && <p className="text-gray-400">No API keys found.</p>}
+                </div>
         </div>
     );
 }

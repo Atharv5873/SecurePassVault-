@@ -79,7 +79,6 @@ export default function License({ userToken, onNewEntry }: LicenseProps) {
                 {/* Product Name Field */}
                 <div className="space-y-2">
                     <label className="block text-sm font-medium text-gray-300 flex items-center gap-2">
-                        <Globe size={16} />
                         Product Name
                     </label>
                     <div className="relative">
@@ -97,7 +96,6 @@ export default function License({ userToken, onNewEntry }: LicenseProps) {
                 {/* License Key Field */}
                 <div className="space-y-2">
                     <label className="block text-sm font-medium text-gray-300 flex items-center gap-2">
-                        <Lock size={16} />
                         License Key
                     </label>
                     <div className="relative">
@@ -123,8 +121,7 @@ export default function License({ userToken, onNewEntry }: LicenseProps) {
                 {/* Description Field */}
                 <div className="space-y-2">
                     <label className="block text-sm font-medium text-gray-300 flex items-center gap-2">
-                        <LetterText size={16} />
-                        Description
+                        Description (optional)
                     </label>
                     <div className="relative">
                         <input

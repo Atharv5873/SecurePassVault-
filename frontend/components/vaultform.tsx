@@ -72,7 +72,6 @@ export default function VaultForm({ userToken, onNewEntry }: VaultFormProps) {
                 {/* Website Field */}
                 <div className="space-y-2">
                     <label className="block text-sm font-medium text-gray-300 flex items-center gap-2">
-                        <Globe size={16} />
                         Website
                     </label>
                     <div className="relative">
@@ -90,7 +89,6 @@ export default function VaultForm({ userToken, onNewEntry }: VaultFormProps) {
                 {/* Username Field */}
                 <div className="space-y-2">
                     <label className="block text-sm font-medium text-gray-300 flex items-center gap-2">
-                        <User size={16} />
                         Username
                     </label>
                     <div className="relative">
@@ -108,7 +106,6 @@ export default function VaultForm({ userToken, onNewEntry }: VaultFormProps) {
                 {/* Password Field */}
                 <div className="space-y-2">
                     <label className="block text-sm font-medium text-gray-300 flex items-center gap-2">
-                        <Lock size={16} />
                         Password
                     </label>
                     <div className="relative">
