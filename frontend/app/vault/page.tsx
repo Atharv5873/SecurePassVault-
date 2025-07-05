@@ -11,12 +11,13 @@ import PasswordChecker from '@/components/passwordchecker';
 import License from '@/components/licenseForm';
 import NoteForm from '@/components/noteForm';
 import Api from '@/components/apiForm';
-import { Code, Gauge, Key, KeyRound, Plus, StickyNote } from 'lucide-react';
+import { Code, Gauge, Key, KeyRound, Plus, StickyNote, WandSparkles } from 'lucide-react';
+import GenerateStrongPassword from '@/components/pwgen';
 
 export default function VaultPage() {
     const [token, setToken] = useState<string | null>(null);
     const [entries, setEntries] = useState<(VaultEntry | LicenseEntry | NoteEntry | ApiEntry)[]>([]);
-    const [activeTab, setActiveTab] = useState<'vault' | 'add' | 'pw' | 'addkey'| 'addnote'|'addapi'>('vault');
+    const [activeTab, setActiveTab] = useState<'vault' | 'add' | 'pw' | 'addkey'| 'addnote'|'addapi'|'pgen'>('vault');
     const [entriesLoaded, setEntriesLoaded] = useState(false);
     const [userEmail, setUserEmail] = useState<string>('');
     const router = useRouter();
@@ -173,6 +174,13 @@ export default function VaultPage() {
                                 <Gauge className="w-6 h-6 text-currentColor" />
                                 <span>Check Password Strength</span>
                             </button>
+                            <button
+                                onClick={() => setActiveTab('pgen')}
+                                className={`w-full text-left px-4 py-3 rounded-lg transition-all duration-200 flex items-center space-x-3 ${activeTab === 'pgen' ? 'bg-[color:var(--neon)]/20 border border-[color:var(--neon)]/40 neon-text' : 'text-gray-300 hover:bg-gray-800/50 hover:text-white'}`}
+                            >
+                                <WandSparkles className="w-6 h-6 text-currentColor" />
+                                <span>Generate Strong Password</span>
+                            </button>
                         </div>
                     </nav>
                 </div>
@@ -205,7 +213,8 @@ export default function VaultPage() {
                                     addkey: 'Add Product Key',
                                     pw: 'Password Strength Checker',
                                     addnote: 'Add Secret Note',
-                                    addapi: 'Add API Key'
+                                    addapi: 'Add API Key',
+                                    pgen: 'Generate Strong Password'
                                 }[activeTab]}
                             </h2>
                             <p className="text-gray-400 text-sm">
@@ -221,6 +230,8 @@ export default function VaultPage() {
                                                 ? 'Add a secret note to your vault'
                                                 : activeTab === 'addapi'
                                                 ? 'Store API keys securely'
+                                                : activeTab === 'pgen'
+                                                ? 'Generate a strong password'
                                             : 'Check the strength of your passwords'}
                             </p>
                         </div>
@@ -262,6 +273,12 @@ export default function VaultPage() {
                             <div className="max-w-2xl mx-auto">
                                 <div className="bg-gradient-to-br from-black via-gray-900 to-gray-950 border border-[color:var(--neon)]/30 rounded-2xl p-6 lg:p-8 shadow-xl">
                                     <Api userToken={token} onNewEntry={handleNewEntry} />
+                                </div>
+                            </div>
+                        ) : activeTab === 'pgen' ? (
+                            <div className="max-w-2xl mx-auto">
+                                <div className="bg-gradient-to-br from-black via-gray-900 to-gray-950 rounded-2xl p-6 lg:p-8 shadow-xl">
+                                    <GenerateStrongPassword />
                                 </div>
                             </div>
                         ) : (
