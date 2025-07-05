@@ -3,7 +3,6 @@ import type { Metadata } from "next";
 import { ThemeProvider } from "next-themes";
 import { CryptoProvider } from "@/contexts/cryptocontext";
 import { Toaster } from "react-hot-toast";
-import PingerClientWrapper from "@/components/pinger";
 // import Navbar from "@/components/navbar";
 
 export const metadata: Metadata = {
@@ -93,7 +92,6 @@ export default function RootLayout({
                 <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
                     {/* <Navbar /> */}
                     <CryptoProvider>
-                        <PingerClientWrapper />
                         {children}
                         <footer className="w-full mt-auto py-6 text-center text-xs text-gray-400 border-t border-gray-800 bg-black/70 backdrop-blur-sm">
                             © 2025 Cyber Cordon. All rights reserved. | Empowering Security for a Safer India

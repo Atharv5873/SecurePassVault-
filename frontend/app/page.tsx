@@ -35,6 +35,8 @@ export default function Home() {
   const [email, setEmail] = useState('');
   const [otp, setOtp] = useState('');
   const [isSending, setIsSending] = useState(false);
+  const [isRegistering, setIsRegistering] = useState(false);
+  const [isLoginLoading, setIsLoginLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [registerPassword, setRegisterPassword] = useState('');
   const [registerConfirmPassword, setRegisterConfirmPassword] = useState('');
@@ -58,6 +60,7 @@ export default function Home() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoginLoading(true);
     try {
       toast.dismiss();
       toast.loading('Logging in...');
@@ -66,11 +69,10 @@ export default function Home() {
       const pepperData = await pepperRes.json();
       if (!pepperRes.ok || !pepperData.pepper) {
         toast.dismiss();
-        toast.error(pepperData.detail || 'Could not fetch salt or pepper');
+        toast.error('Please register first!');
         return;
       }
       const pepper = Uint8Array.from(atob(pepperData.pepper), c => c.charCodeAt(0));
-
       const hashedPassword = await hashPasswordWithPepper(loginPassword, pepper);
 
       const formData = new URLSearchParams();
@@ -88,16 +90,19 @@ export default function Home() {
       toast.dismiss();
 
       if (!res.ok) {
-        const errorMsg = typeof data.detail === 'string' ? data.detail : Array.isArray(data.detail) ? data.detail.map((d: { msg: string }) => d.msg).join(', ') : data.message || 'Login failed';
+        const errorMsg = typeof data.detail === 'string'
+          ? data.detail
+          : Array.isArray(data.detail)
+            ? data.detail.map((d: { msg: string }) => d.msg).join(', ')
+            : data.message || 'Login failed';
         toast.error(errorMsg);
         return;
       }
+
       const saltRes = await fetch(`/auth/salt?username=${encodeURIComponent(loginEmail)}`, {
-        headers: {
-          Authorization: `Bearer ${data.access_token}`,
-        },
+        headers: { Authorization: `Bearer ${data.access_token}` },
       });
-      
+
       const saltData = await saltRes.json();
       if (!saltRes.ok || !saltData.salt) {
         toast.dismiss();
@@ -106,7 +111,6 @@ export default function Home() {
       }
 
       const salt = Uint8Array.from(atob(saltData.salt), c => c.charCodeAt(0));
-
       toast.success('Login successful!');
       toast.loading('Initiating Encryption...');
 
@@ -121,16 +125,15 @@ export default function Home() {
       sessionStorage.setItem('user-email', loginEmail);
 
       setDerivedKey(key);
+      setShowLoginModal(false);
 
       const meRes = await fetch('/auth/me', {
         headers: { Authorization: `Bearer ${data.access_token}` },
       });
 
-      setShowLoginModal(false);
       if (meRes.ok) {
         const meData = await meRes.json();
-        if (meData.is_admin) router.push('/admin');
-        else router.push('/vault');
+        meData.is_admin ? router.push('/admin') : router.push('/vault');
       } else {
         router.push('/vault');
       }
@@ -138,8 +141,11 @@ export default function Home() {
       toast.dismiss();
       console.error(err);
       toast.error('Unexpected error during login.');
+    } finally {
+      setIsLoginLoading(false);
     }
   };
+  
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -147,6 +153,8 @@ export default function Home() {
       toast.error('Passwords do not match');
       return;
     }
+
+    setIsRegistering(true);
     try {
       toast.dismiss();
       toast.loading('Creating account...');
@@ -155,15 +163,14 @@ export default function Home() {
       const pepper = generatePepper();
       const encodedSalt = encodeSalt(salt);
       const encodedPepper = encodePepper(pepper);
-
       const hashedPassword = await hashPasswordWithPepper(registerPassword, pepper);
 
       const res = await fetch('/auth/verify-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          email: email,
-          otp: otp,
+          email,
+          otp,
           password: hashedPassword,
           salt: encodedSalt,
           pepper: encodedPepper,
@@ -174,7 +181,11 @@ export default function Home() {
       toast.dismiss();
 
       if (!res.ok) {
-        const errorMsg = typeof data.detail === 'string' ? data.detail : Array.isArray(data.detail) ? data.detail.map((d: { msg: string }) => d.msg).join(', ') : data.message || 'Registration failed';
+        const errorMsg = typeof data.detail === 'string'
+          ? data.detail
+          : Array.isArray(data.detail)
+            ? data.detail.map((d: { msg: string }) => d.msg).join(', ')
+            : data.message || 'Registration failed';
         toast.error(errorMsg);
         return;
       }
@@ -185,9 +196,12 @@ export default function Home() {
     } catch (err) {
       toast.dismiss();
       console.error(err);
-      toast.error('Unexpected error during registration.');
+      toast.error('User already exists! Please login.');
+    } finally {
+      setIsRegistering(false);
     }
   };
+  
 
   return (
     <div className="min-h-screen w-full flex flex-col lg:flex-row">
@@ -350,9 +364,14 @@ export default function Home() {
                     className="w-full px-4 py-2 bg-[#181c1b] border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-[color:var(--neon)]"
                   />
                 </div>
-                <button type="submit" className="px-6 py-3 bg-[color:var(--neon)] text-black font-semibold rounded-md hover:bg-blue-400 transition-all duration-200">
-                  Login
+                <button
+                  type="submit"
+                  disabled={isLoginLoading}
+                  className="px-6 py-3 bg-[color:var(--neon)] text-black font-semibold rounded-md hover:bg-blue-400 transition-all duration-200 disabled:opacity-60"
+                >
+                  {isLoginLoading ? 'Logging in...' : 'Login'}
                 </button>
+
               </form>
             </div>
           )}
@@ -446,8 +465,12 @@ export default function Home() {
                     className="w-full px-4 py-2 bg-[#181c1b] border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-[color:var(--neon)]"
                   />
                 </div>
-                <button type="submit" className="px-6 py-3 bg-[color:var(--neon)] text-black font-semibold rounded-md hover:bg-blue-400 transition-all duration-200">
-                  Register
+                <button
+                  type="submit"
+                  disabled={isRegistering}
+                  className="px-6 py-3 bg-[color:var(--neon)] text-black font-semibold rounded-md hover:bg-blue-400 transition-all duration-200 disabled:opacity-60"
+                >
+                  {isRegistering ? 'Registering...' : 'Register'}
                 </button>
                 <div className="mt-6 p-4 rounded-xl bg-[color:var(--neon)]/10 border border-[color:var(--neon)]/20">
                   <div className="flex items-start gap-3">
