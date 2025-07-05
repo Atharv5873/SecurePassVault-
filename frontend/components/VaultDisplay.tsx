@@ -62,7 +62,7 @@ export default function VaultDisplay({
                     const errProducts = await resProducts.json().catch(() => ({}));
                     const errNotes = await resNotes.json().catch(() => ({}));
                     const errApiKeys = await resApiKeys.json().catch(() => ({}));
-                    throw new Error(errCredentials?.detail || errProducts?.detail || 'Failed to fetch entries');
+                    throw new Error(errCredentials?.detail || errProducts?.detail || errNotes||errApiKeys ||'Failed to fetch entries');
                 }
 
                 const dataCredentials = await resCredentials.json();

@@ -143,7 +143,7 @@ export default function NoteForm({ userToken, onNewEntry }: NoteFormProps) {
                     <div className="w-2 h-2 bg-[color:var(--neon)] rounded-full mt-2 flex-shrink-0"></div>
                     <div>
                         <p className="text-sm text-gray-300">
-                            <span className="font-medium text-[color:var(--neon)]">Security Note:</span> Your note's content is encrypted before being sent to our servers. We cannot see or access your actual content.
+                            <span className="font-medium text-[color:var(--neon)]">Security Note:</span> Your note&apos;s content is encrypted before being sent to our servers. We cannot see or access your actual content.
                         </p>
                     </div>
                 </div>
