@@ -8,7 +8,7 @@ export function cn(...inputs: ClassValue[]) {
 
 export const pingServer = async () => {
   try {
-    const res = await fetch(process.env.BASE_API_URL || '', {
+    const res = await fetch(process.env.BASE_API_URL || 'https://securepassvault-1.onrender.com', {
       method: 'GET',
       cache: 'no-store',
     });
