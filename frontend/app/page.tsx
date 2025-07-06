@@ -125,7 +125,6 @@ export default function Home() {
       sessionStorage.setItem('user-email', loginEmail);
 
       setDerivedKey(key);
-      setShowLoginModal(false);
 
       const meRes = await fetch('/auth/me', {
         headers: { Authorization: `Bearer ${data.access_token}` },
@@ -314,14 +313,21 @@ export default function Home() {
           </section>
         </div>
         {/* Bottom links */}
-        <Link href="/why" className="hover:text-white transition-colors duration-200 mr-4">
-          Why SecurePass Vault?
-        </Link>
-        <div className="absolute bottom-4 sm:bottom-6 lg:bottom-8 left-1/2 transform -translate-x-1/2 text-gray-400 text-xs sm:text-sm">
-            <Link href="/whitepaper" className="hover:text-white transition-colors duration-200">
-              Read our Whitepaper
-            </Link>
+        <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-center sm:gap-6 text-sm sm:text-base">
+          <Link
+            href="/why"
+            className="px-4 py-2 rounded-md bg-white/10 text-white hover:bg-white/20 transition-colors duration-200"
+          >
+            Why SecurePass Vault?
+          </Link>
+          <Link
+            href="/whitepaper"
+            className="px-4 py-2 rounded-md bg-white/10 text-white hover:bg-white/20 transition-colors duration-200"
+          >
+            Read our Whitepaper
+          </Link>
         </div>
+
         {/* Top-right logo */}
         <div className="absolute top-2 sm:top-4 lg:top-8 right-2 sm:right-4 lg:right-12 z-20">
           <a

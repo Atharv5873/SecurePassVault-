@@ -26,7 +26,7 @@ export default function Api({ userToken, onNewEntry }: ApiProps) {
 
         const { description, serviceName, apiKey } = form;
         if (!serviceName) return toast.error('Service name is required');
-        if (!apiKey) return toast.error('Api key is required');
+        if (!apiKey) return toast.error('API key is required');
 
         try {
             setLoading(true);
@@ -56,7 +56,7 @@ export default function Api({ userToken, onNewEntry }: ApiProps) {
                 description,
             });
 
-            toast.success('Api key saved securely!');
+            toast.success('API key saved securely!');
             setForm({ serviceName: '', apiKey: '', description: '' });
             setShowApiKey(false);
         } catch (err) {
@@ -96,7 +96,7 @@ export default function Api({ userToken, onNewEntry }: ApiProps) {
                 {/* Api Key Field */}
                 <div className="space-y-2">
                     <label className="block text-sm font-medium text-gray-300 flex items-center gap-2">
-                        Api Key
+                        API Key
                     </label>
                     <div className="relative">
                         <input
@@ -145,7 +145,7 @@ export default function Api({ userToken, onNewEntry }: ApiProps) {
                 >
                     <div className="flex items-center justify-center gap-2">
                         <Lock size={20} />
-                        {loading ? 'Saving...' : 'Save Api Key Securely'}
+                        {loading ? 'Saving...' : 'Save API Securely'}
                     </div>
                 </button>
             </form>
