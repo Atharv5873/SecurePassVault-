@@ -42,14 +42,8 @@ export default function Home() {
   const [registerConfirmPassword, setRegisterConfirmPassword] = useState('');
   const router = useRouter();
   const { setDerivedKey } = useCrypto();
-  const [showMobilePopup, setShowMobilePopup] = useState(false);
-
-  useEffect(() => {
-    const dismissed = sessionStorage.getItem('dismissMobilePopup');
-    if (!dismissed && typeof window !== 'undefined' && window.innerWidth < 768) {
-      setShowMobilePopup(true);
-    }
-  }, []);
+  const [showLeftPanel, setShowLeftPanel] = useState(false);
+ 
 
   useEffect(() => {
     fetch(`/admin/user-count`)
@@ -204,9 +198,19 @@ export default function Home() {
   
 
   return (
-    <div className="min-h-screen w-full flex flex-col lg:flex-row">
+    <div className="min-h-screen w-full flex flex-col lg:flex-row relative">
+      {/* Mobile Toggle Button */}
+      <button
+        onClick={() => setShowLeftPanel(!showLeftPanel)}
+        className="lg:hidden fixed top-4 left-4 z-50 bg-[color:var(--neon)]/20 border border-[color:var(--neon)]/40 rounded-lg p-2 backdrop-blur-sm"
+      >
+        ☰
+      </button>
+
       {/* Left Panel */}
-      <section className="w-full lg:w-110 bg-[#0d0f0f] flex flex-col justify-between p-4 sm:p-6 lg:p-12">
+      <section className={`w-full lg:w-110 bg-[#0d0f0f] flex flex-col justify-between p-4 sm:p-6 lg:p-12 z-40 transition-all duration-300 ease-in-out
+    ${showLeftPanel ? 'block' : 'hidden'} lg:block absolute top-0 left-0 h-full lg:relative lg:h-auto`}
+      >
         <div>
           <div className="flex justify-between text-[10px] sm:text-xs text-gray-400 mb-6 sm:mb-8">
             <span>© 2025 • Cyber Cordon</span>
@@ -253,7 +257,7 @@ export default function Home() {
       </section>
 
       {/* Right Panel */}
-      <section className="w-full bg-gradient-to-br from-black via-gray-900 to-gray-950 flex flex-col items-center justify-start relative p-4 sm:p-6">
+      <section className="flex-1 bg-gradient-to-br from-black via-gray-900 to-gray-950 flex flex-col items-center justify-start relative p-4 sm:p-6">
         <div className="relative z-10 flex flex-col items-center pt-0 mt-10">
           <Image
             src="/applogo.png.png"
@@ -503,26 +507,6 @@ export default function Home() {
           )}
         </div>
       )}
-      {showMobilePopup && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md">
-          <div className="bg-[#1e1e1e] border border-[color:var(--neon)] p-6 rounded-xl shadow-lg max-w-sm text-center space-y-4">
-            <h2 className="text-xl font-bold neon-text">Heads Up!</h2>
-            <p className="text-gray-300 text-sm">
-              This site is optimized for desktop. For the best experience, please switch to a larger screen. You are advised to scroll down to view the content while using a mobile device.<br /><strong>Mobile friendly version coming soon</strong>
-            </p>
-            <button
-              onClick={() => {
-                sessionStorage.setItem('dismissMobilePopup', 'true');
-                setShowMobilePopup(false);
-              }}
-              className="mt-2 px-4 py-2 bg-[color:var(--neon)] text-black rounded-lg font-semibold hover:bg-opacity-90 transition"
-            >
-              Continue Anyway
-            </button>
-          </div>
-        </div>
-      )}
-
     </div>
   );
 }
