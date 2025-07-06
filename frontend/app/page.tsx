@@ -508,7 +508,7 @@ export default function Home() {
           <div className="bg-[#1e1e1e] border border-[color:var(--neon)] p-6 rounded-xl shadow-lg max-w-sm text-center space-y-4">
             <h2 className="text-xl font-bold neon-text">Heads Up!</h2>
             <p className="text-gray-300 text-sm">
-              This site is optimized for desktop. For the best experience, please switch to a larger screen. You are advised to scroll down to view the content while using a mobile device.
+              This site is optimized for desktop. For the best experience, please switch to a larger screen. You are advised to scroll down to view the content while using a mobile device.<br /><strong>Mobile friendly version coming soon</strong>
             </p>
             <button
               onClick={() => {

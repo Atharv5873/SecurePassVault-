@@ -11,20 +11,10 @@
       "static/chunks/main-app.js",
       "static/chunks/app/page.js"
     ],
-    "/vault/page": [
+    "/_not-found/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/vault/page.js"
-    ],
-    "/why/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/why/page.js"
-    ],
-    "/whitepaper/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/whitepaper/page.js"
+      "static/chunks/app/_not-found/page.js"
     ]
   }
 }
