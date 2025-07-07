@@ -10,6 +10,7 @@ import { encryptText } from '@/lib/crypto/encrypt';
 import { scrypt } from 'scrypt-js';
 import Image from 'next/image';
 import Link from "next/link";
+import V3Popup from '@/components/v3';
 
 function generatePepper(): Uint8Array {
   return crypto.getRandomValues(new Uint8Array(16));
@@ -199,6 +200,8 @@ export default function Home() {
 
   return (
     <div className="min-h-screen w-full flex flex-col lg:flex-row relative">
+
+      <V3Popup />
       {/* Mobile Toggle Button */}
       <button
         onClick={() => setShowLeftPanel(!showLeftPanel)}
@@ -214,7 +217,7 @@ export default function Home() {
         <div>
           <div className="flex justify-between text-[10px] sm:text-xs text-gray-400 mb-6 sm:mb-8">
             <span>© 2025 • Cyber Cordon</span>
-            <span>ver 2.3.0</span>
+            <span>ver 2.6.9</span>
           </div>
           <div className="text-xl sm:text-2xl lg:text-4xl font-semibold mb-3 text-center sm:mb-4" style={{ letterSpacing: '0.01em' }}>
             Vault so secure even Gru can&apos;t break in
