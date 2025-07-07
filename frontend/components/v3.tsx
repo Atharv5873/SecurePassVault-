@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 
-export default function v3Popup() {
+export default function V3Popup() {
     const [showPopup, setShowPopup] = useState(false);
 
     useEffect(() => {
