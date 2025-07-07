@@ -25,7 +25,7 @@ export default function v3Popup() {
                 </button>
                 <h1 className="text-xl text-center font-bold mb-2">Coming soon (ver 3.0.0)</h1>
                 <p className="text-sm text-gray-600 text-center dark:text-gray-300 mb-4">
-                    <strong>Worried about forgettiong your vault password and losing access to your data?</strong><br /><br /> Our next version will make use of <strong>passkey</strong> to securely encrypt and store your vault password, eliminating the need to remember it. You will also be able to change/reset your vault password without losing access to your saved data!
+                    <strong>Worried about forgetting your vault password and losing access to your data?</strong><br /><br /> Our next version will make use of <strong>passkey</strong> to securely encrypt and store your vault password, <strong>eliminating the need to remember</strong> it. You will also be able to change/reset your vault password without losing access to your saved data!
                 </p>                
             </div>
         </div>
