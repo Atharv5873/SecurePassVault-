@@ -44,7 +44,7 @@ export default function Home() {
   const router = useRouter();
   const { setDerivedKey } = useCrypto();
   const [showLeftPanel, setShowLeftPanel] = useState(false);
- 
+
 
   useEffect(() => {
     fetch(`/admin/user-count`)
@@ -140,7 +140,7 @@ export default function Home() {
       setIsLoginLoading(false);
     }
   };
-  
+
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -196,7 +196,7 @@ export default function Home() {
       setIsRegistering(false);
     }
   };
-  
+
 
   return (
     <div className="min-h-screen w-full flex flex-col lg:flex-row relative">
@@ -356,9 +356,9 @@ export default function Home() {
       </section>
 
       {(showLoginModal || showRegisterModal) && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           {showLoginModal && (
-            <div className="bg-gradient-to-br from-gray-850 via-gray-900 to-gray-800 p-8 w-full max-w-md rounded-lg shadow-xl relative z-50">
+            <div className="bg-gradient-to-br from-gray-850 via-gray-900 to-gray-800 p-6 sm:p-8 w-full max-w-md rounded-lg shadow-xl relative z-50">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-2xl font-bold neon-text">Login</h2>
                 <button onClick={() => setShowLoginModal(false)} className="text-gray-400 hover:text-white text-2xl">&times;</button>
@@ -399,113 +399,119 @@ export default function Home() {
           )}
 
           {showRegisterModal && (
-            <div className="bg-gradient-to-br from-gray-850 via-gray-900 to-gray-800 p-8 w-full max-w-md rounded-lg shadow-xl relative z-50">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold neon-text">Register</h2>
-                <button onClick={() => setShowRegisterModal(false)} className="text-gray-400 hover:text-white text-2xl">&times;</button>
+            <div className="bg-gradient-to-br from-gray-850 via-gray-900 to-gray-800 w-full max-w-xs sm:max-w-sm md:max-w-md xl:max-w-lg rounded-lg shadow-xl relative z-50 max-h-[85vh] overflow-hidden">
+              <div className="flex justify-between items-center p-4 sm:p-6 border-b border-gray-700">
+                <h2 className="text-lg sm:text-xl md:text-2xl font-bold neon-text">Register</h2>
+                <button onClick={() => setShowRegisterModal(false)} className="text-gray-400 hover:text-white text-xl sm:text-2xl">&times;</button>
               </div>
-              <form onSubmit={handleRegister} className="flex flex-col space-y-4">
-                <div className="space-y-4">
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Email</label>
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Enter your email"
-                    className="w-full px-4 py-2 border border-gray-600 bg-[#181c1b] text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-[color:var(--neon)]"
-                  />
 
-                  <button
-                    onClick={async () => {
-                      if (!email || !email.includes('@') || !email.includes('.')) {
-                        setMessage('Please enter a valid email address.');
-                        return;
-                      }
-
-                      setIsSending(true);
-                      setMessage('');
-
-                      try {
-                        const res = await fetch(`/auth/register`, {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({ email }),
-                        });
-
-                        const data = await res.json();
-
-                        if (res.ok) {
-                          setMessage('OTP sent successfully!');
-                        } else {
-                          setMessage(data.detail || data.error || 'Failed to send OTP.');
-                        }
-                      } catch (err) {
-                        console.error(err);
-                        setMessage('Something went wrong.');
-                      } finally {
-                        setIsSending(false);
-                      }
-                    }}
-                    className="w-full py-2 px-4 bg-[color:var(--neon)] text-black font-bold rounded-lg hover:opacity-90 disabled:opacity-50"
-                    disabled={isSending}
-                  >
-                    {isSending ? 'Sending...' : 'Send OTP'}
-                  </button>
-
-                  {message && <p className="text-sm text-gray-300">{message}</p>}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">OTP</label>
-                  <input
-                    type="text"
-                    placeholder="Enter OTP sent to your email"
-                    value={otp}
-                    onChange={(e) => setOtp(e.target.value)}
-                    required
-                    className="w-full px-4 py-2 bg-[#181c1b] border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-[color:var(--neon)]"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Password</label>
-                  <input
-                    type="password"
-                    placeholder="Create a Strong Password"
-                    value={registerPassword}
-                    onChange={(e) => setRegisterPassword(e.target.value)}
-                    required
-                    className="w-full px-4 py-2 bg-[#181c1b] border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-[color:var(--neon)]"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Confirm Password</label>
-                  <input
-                    type="password"
-                    placeholder="Re-enter your Password"
-                    value={registerConfirmPassword}
-                    onChange={(e) => setRegisterConfirmPassword(e.target.value)}
-                    required
-                    className="w-full px-4 py-2 bg-[#181c1b] border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-[color:var(--neon)]"
-                  />
-                </div>
-                <button
-                  type="submit"
-                  disabled={isRegistering}
-                  className="px-6 py-3 bg-[color:var(--neon)] text-black font-semibold rounded-md hover:bg-blue-400 transition-all duration-200 disabled:opacity-60"
-                >
-                  {isRegistering ? 'Registering...' : 'Register'}
-                </button>
-                <div className="mt-6 p-4 rounded-xl bg-[color:var(--neon)]/10 border border-[color:var(--neon)]/20">
-                  <div className="flex items-start gap-3">
-                    <div className="w-2 h-2 bg-[color:var(--neon)] rounded-full mt-2 flex-shrink-0"></div>
+              <div className="overflow-y-auto max-h-[calc(85vh-80px)] p-4 sm:p-6">
+                <form onSubmit={handleRegister} className="flex flex-col space-y-3 sm:space-y-4">
+                  <div className="space-y-3 sm:space-y-4">
                     <div>
-                      <p className="text-sm text-gray-300">
-                        <span className="font-medium text-[color:var(--neon)]">Important Note:</span> Your password is used for generating your encryptyion key. Make sure you always remember it. We cannot help in retrieving your passwords in case you forget your vault&apos;s password.
-                      </p>
+                      <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-1 sm:mb-2">Email</label>
+                      <input
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="Enter your email"
+                        className="w-full px-3 sm:px-4 py-2 border border-gray-600 bg-[#181c1b] text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-[color:var(--neon)] text-sm sm:text-base"
+                      />
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        if (!email || !email.includes('@') || !email.includes('.')) {
+                          setMessage('Please enter a valid email address.');
+                          return;
+                        }
+
+                        setIsSending(true);
+                        setMessage('');
+
+                        try {
+                          const res = await fetch(`/auth/register`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ email }),
+                          });
+
+                          const data = await res.json();
+
+                          if (res.ok) {
+                            setMessage('OTP sent successfully!');
+                          } else {
+                            setMessage(data.detail || data.error || 'Failed to send OTP.');
+                          }
+                        } catch (err) {
+                          console.error(err);
+                          setMessage('Something went wrong.');
+                        } finally {
+                          setIsSending(false);
+                        }
+                      }}
+                      className="w-full py-2 px-3 sm:px-4 bg-[color:var(--neon)] text-black font-bold rounded-lg hover:opacity-90 disabled:opacity-50 text-sm sm:text-base"
+                      disabled={isSending}
+                    >
+                      {isSending ? 'Sending...' : 'Send OTP'}
+                    </button>
+
+                    {message && <p className="text-xs sm:text-sm text-gray-300">{message}</p>}
+                  </div>
+
+                  <div>
+                    <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-1 sm:mb-2">OTP</label>
+                    <input
+                      type="text"
+                      placeholder="Enter OTP sent to your email"
+                      value={otp}
+                      onChange={(e) => setOtp(e.target.value)}
+                      required
+                      className="w-full px-3 sm:px-4 py-2 bg-[#181c1b] border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-[color:var(--neon)] text-sm sm:text-base"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-1 sm:mb-2">Password</label>
+                    <input
+                      type="password"
+                      placeholder="Create a Strong Password"
+                      value={registerPassword}
+                      onChange={(e) => setRegisterPassword(e.target.value)}
+                      required
+                      className="w-full px-3 sm:px-4 py-2 bg-[#181c1b] border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-[color:var(--neon)] text-sm sm:text-base"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-1 sm:mb-2">Confirm Password</label>
+                    <input
+                      type="password"
+                      placeholder="Re-enter your Password"
+                      value={registerConfirmPassword}
+                      onChange={(e) => setRegisterConfirmPassword(e.target.value)}
+                      required
+                      className="w-full px-3 sm:px-4 py-2 bg-[#181c1b] border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-[color:var(--neon)] text-sm sm:text-base"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={isRegistering}
+                    className="w-full px-4 sm:px-6 py-2 sm:py-3 bg-[color:var(--neon)] text-black font-semibold rounded-md hover:bg-blue-400 transition-all duration-200 disabled:opacity-60 text-sm sm:text-base"
+                  >
+                    {isRegistering ? 'Registering...' : 'Register'}
+                  </button>
+                  <div className="mt-3 sm:mt-4 p-3 sm:p-4 rounded-xl bg-[color:var(--neon)]/10 border border-[color:var(--neon)]/20">
+                    <div className="flex items-start gap-2 sm:gap-3">
+                      <div className="w-2 h-2 bg-[color:var(--neon)] rounded-full mt-1 sm:mt-2 flex-shrink-0"></div>
+                      <div>
+                        <p className="text-xs sm:text-sm text-gray-300">
+                          <span className="font-medium text-red-500">Important Note:</span> Your password is used for generating your encryptyion key. Make sure you always remember it. We cannot help in retrieving your passwords in case you forget your vault&apos;s password.
+                        </p>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </form>
+                </form>
+              </div>
             </div>
           )}
         </div>

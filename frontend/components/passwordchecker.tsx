@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { EyeOff, Eye } from "lucide-react";
 
 interface CrackTimes {
     [method: string]: string;
@@ -20,6 +21,7 @@ export default function PasswordChecker() {
     const [password, setPassword] = useState("");
     const [result, setResult] = useState<null | PasswordStrengthResult>(null);
     const [loading, setLoading] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
 
     const checkStrength = async () => {
         if (!password) return;
@@ -77,13 +79,28 @@ export default function PasswordChecker() {
             <h3 className="font-semibold neon-text text-2xl text-center mb-4">Check Your Password Strength</h3>
 
             <div className="max-w-xl mx-auto space-y-4">
-                <input
-                    type="text"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Enter password"
-                    className="w-full px-3 py-2 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-[color:var(--neon)]/30 bg-gray-800 border border-gray-700 placeholder-gray-500 transition duration-200"
-                />
+                <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-300 flex items-center gap-2">
+                        Password
+                    </label>
+                    <div className="relative">
+                        <input
+                            type={showPassword ? "text" : "password"}
+                            className="w-full px-4 py-3 pl-12 pr-12 rounded-xl bg-white/5 border border-[color:var(--neon)]/30 text-white placeholder-gray-400 focus:outline-none focus:border-[color:var(--neon)]/60 focus:ring-1 focus:ring-[color:var(--neon)]/30 transition-all duration-200"
+                            placeholder="Enter a password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            required
+                        />
+                        <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-[color:var(--neon)] transition-colors"
+                        >
+                            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                        </button>
+                    </div>
+                </div>
 
                 <button
                     onClick={checkStrength}
@@ -108,9 +125,6 @@ export default function PasswordChecker() {
                         <div className="flex flex-col md:flex-row justify-center items-stretch gap-8 md:gap-12 w-full max-w-5xl mx-auto">
                             {/* Left Column */}
                             <div className="flex-1 space-y-4 justify-center md:text-left">
-                                <div className="flex flex-col sm:flex-row justify-end gap-4">
-                                    <p><strong>Password:</strong> {result.password}</p>
-                                </div>
                                 <div className="flex flex-col sm:flex-row justify-center gap-4 sm:pl-50">
                                     <p><strong>Length:</strong> {result.length}</p>
                                 </div>
