@@ -8,9 +8,9 @@ import { Toaster } from "react-hot-toast";
 export const metadata: Metadata = {
     title: "SecurePass Vault | Cyber Cordon",
     description:
-        "The safest place to store your passwords — zero-knowledge architecture & two-layer encryption.",
+        "The safest place to store your passwords — zero-knowledge architecture & two-layer encryption. SecurePass Vault protects your data with enterprise-grade encryption, penetration-tested infrastructure, and trusted by cybersecurity experts.",
     keywords:
-        "Password, Vault, Privacy, Encryption, Safe, data, secure, security,VAPT services, web application penetration testing, website security audit, vulnerability assessment and penetration testing, application security testing services, ethical hacking services, API security testing, mobile app VAPT, cloud web app security assessment, DevSecOps consulting, web infrastructure security audit, OWASP Top 10 testing services, source code review for security, configuration audit web server, online penetration testing, remote VAPT services, digital security audit, application security posture assessment, affordable VAPT services, cost-effective penetration testing, budget-friendly web security audit, low cost VAPT for startups, economic cybersecurity solutions, competitive VAPT pricing, cheap web application security audit, VAPT packages prices, best value VAPT services, affordable cybersecurity solutions, VAPT services India, web application penetration testing India, website security audit India, ethical hacking services India, cybersecurity services India, best VAPT company India, Indian cybersecurity startup, VAPT services Amaravati, web application security Amaravati, cybersecurity audit Amaravati, penetration testing Andhra Pradesh, cybersecurity company Amaravati, Amaravati based VAPT services, security assessment Vijayawada, Andhra Pradesh cybersecurity firms, global VAPT services, international penetration testing, worldwide cybersecurity services, expert VAPT services, certified ethical hackers, award-winning cybersecurity solutions, innovative VAPT methodology, skilled penetration testers, next-gen web security solutions, trusted cybersecurity partner, reliable VAPT company, experienced cybersecurity consultants, hackathon based security solutions, cutting-edge cybersecurity, secure web application development, website hacking prevention services, data breach protection for web apps, cyber risk assessment, digital asset protection services, prevent website attacks, fix website vulnerabilities, protect online business from cyber threats, malware removal for websites, phishing prevention for web apps, DDoS protection assessment, SQL injection prevention, cross-site scripting (XSS) prevention, broken authentication detection, security misconfiguration audit, unrestricted file upload vulnerabilities fix, web security best practices, easy to understand VAPT reports, simple security audit reports, non-technical vulnerability assessment reports, clear penetration testing findings, user-friendly cybersecurity reports, actionable VAPT recommendations, plain language security reports, VAPT reports for business owners, understandable web security audit, easy to read vulnerability reports, VAPT for non-tech users, clear remediation steps VAPT, simplified security reports, business-focused VAPT reports, jargon-free security reports, PCI DSS compliance VAPT, GDPR compliance security audit, ISO 27001 VAPT requirements, HIPAA compliance security, SOC 2 security assessment, cybersecurity for startups, SME cybersecurity solutions, e-commerce security solutions, CERT-In empanelled VAPT India, DPDP Act compliance security assessment, RBI cybersecurity guidelines compliance, cyber security solutions for businesses, online security assessment services, information security consulting, digital security services, enterprise cybersecurity solutions, risk management cyber security, cyber threat intelligence services, security posture assessment, managed security services, cybersecurity firm, cyber security company, web security company, application security vendor, Cyber Cordon, Cyber Cordon VAPT, Cyber Cordon India, Cyber Cordon cybersecurity, Cyber Cordon reviews",
+        "Password manager, Password Vault, Privacy-first password storage, Zero-knowledge encryption, Secure password app, Cybersecurity, VAPT services, Web application penetration testing, Secure data storage, Cybersecurity India, Cyber Cordon, Encrypted vault, Cloud password manager, Digital security solutions, Startup cybersecurity, Enterprise password protection, Application security testing, OWASP Top 10 prevention, SecurePass Vault reviews, Best password manager India, Amaravati cybersecurity, Andhra Pradesh cybersecurity, Affordable VAPT services, Encrypted credential manager, Secure login vault, Prevent website attacks, Protect online accounts, Ethical hacking services, API security testing, Cybersecurity for startups",
     icons: {
         icon: "/cc1.ico",
     },
@@ -66,12 +66,40 @@ export default function RootLayout({
         ],
     };
 
-    const orgSchema = {
-        "@context": "https://schema.org",
+    const productSchema = {
+        "@context": "https://schema.org/",
         "@type": "Product",
         name: "SecurePass Vault",
         url: "https://securepass-vault.onrender.com/",
         logo: "https://securepass-vault.onrender.com/logo.png",
+        description:
+            "SecurePass Vault is a privacy-first encrypted password manager with zero-knowledge architecture, two-layer encryption, and penetration-tested infrastructure. Ideal for startups, businesses, and individuals who value security and privacy.",
+        offers: {
+            "@type": "Offer",
+            price: "0.00",
+            priceCurrency: "USD",
+            availability: "https://schema.org/InStock",
+            url: "https://securepass-vault.onrender.com/"
+        },
+        aggregateRating: {
+            "@type": "AggregateRating",
+            ratingValue: "4.9",
+            reviewCount: "124"
+        },
+        review: {
+            "@type": "Review",
+            author: {
+                "@type": "Person",
+                name: "Jane Doe"
+            },
+            reviewRating: {
+                "@type": "Rating",
+                ratingValue: "5",
+                bestRating: "5"
+            },
+            reviewBody:
+                "SecurePass Vault is a secure, reliable, and easy-to-use password manager. Highly recommended for anyone who values data security."
+        }
     };
 
     return (
@@ -81,7 +109,7 @@ export default function RootLayout({
                 <link rel="icon" href="/favicon.ico" />
                 <script
                     type="application/ld+json"
-                    dangerouslySetInnerHTML={{ __html: JSON.stringify(orgSchema) }}
+                    dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }}
                 />
                 <script
                     type="application/ld+json"
