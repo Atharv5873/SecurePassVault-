@@ -1,0 +1,15 @@
+# robots.txt for SecurePass Vault
+# Allow search engines to crawl public pages, but block sensitive/private areas
+
+User-agent: *
+# Disallow private or non-indexable sections
+Disallow: /admin
+Disallow: /vault
+Disallow: /api/
+Disallow: /_next/
+
+# Everything else is allowed
+Allow: /
+
+# Sitemap location
+Sitemap: https://securepass-vault.onrender.com/sitemap.xml
