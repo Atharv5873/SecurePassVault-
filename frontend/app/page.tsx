@@ -10,7 +10,7 @@ import { encryptText } from '@/lib/crypto/encrypt';
 import { scrypt } from 'scrypt-js';
 import Image from 'next/image';
 import Link from "next/link";
-import V3Popup from '@/components/v3';
+// import V3Popup from '@/components/v3';
 
 function generatePepper(): Uint8Array {
   return crypto.getRandomValues(new Uint8Array(16));
@@ -201,7 +201,7 @@ export default function Home() {
   return (
     <div className="min-h-screen w-full flex flex-col lg:flex-row relative">
 
-      <V3Popup />
+      {/* <V3Popup /> */}
       {/* Mobile Toggle Button */}
       <button
         onClick={() => setShowLeftPanel(!showLeftPanel)}
