@@ -72,6 +72,7 @@ export default function RootLayout({
         name: "SecurePass Vault",
         url: "https://securepass-vault.onrender.com/",
         logo: "https://securepass-vault.onrender.com/logo.png",
+        image: "https://securepass-vault.onrender.com/og-image.png",
         description:
             "SecurePass Vault is a privacy-first encrypted password manager with zero-knowledge architecture, two-layer encryption, and penetration-tested infrastructure. Ideal for startups, businesses, and individuals who value security and privacy.",
         offers: {
