@@ -25,9 +25,6 @@ def gmail_authenticate():
             with open(TOKEN_PATH, 'w') as token:
                 token.write(creds.to_json())
         return build('gmail', 'v1', credentials=creds)
-    except Exception as e:
-        logging.error(f"Gmail authentication failed: {e}")
-        raise
 
 def create_message(sender, to, subject, message_text):
     message = MIMEText(message_text)
@@ -49,7 +46,3 @@ def send_otp_email(to_email: str, otp: str):
     )
     try:
         sent_message = service.users().messages().send(userId='me', body=message).execute()
-        logging.info(f"Message sent, ID: {sent_message['id']}")
-    except Exception as e:
-        logging.error(f"Failed to send OTP email: {e}")
-        raise
