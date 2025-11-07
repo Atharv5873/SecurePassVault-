@@ -5,9 +5,9 @@ from google.oauth2.credentials import Credentials
 from google.auth.transport.requests import Request
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
+import logging
 
 SCOPES = ['https://www.googleapis.com/auth/gmail.send']
-
 CREDENTIALS_PATH = os.getenv('GOOGLE_CREDENTIALS_PATH', 'credentials.json')
 TOKEN_PATH = os.getenv('GOOGLE_TOKEN_PATH', 'token.json')
 
@@ -25,6 +25,9 @@ def gmail_authenticate():
             with open(TOKEN_PATH, 'w') as token:
                 token.write(creds.to_json())
         return build('gmail', 'v1', credentials=creds)
+    except Exception as e:
+        logging.error(f"Gmail authentication failed: {e}")
+        raise
 
 def create_message(sender, to, subject, message_text):
     message = MIMEText(message_text)
@@ -37,6 +40,8 @@ def create_message(sender, to, subject, message_text):
 def send_otp_email(to_email: str, otp: str):
     service = gmail_authenticate()
     sender_email = os.getenv("SENDER_EMAIL")
+    if not sender_email:
+        raise ValueError("Environment variable SENDER_EMAIL is required")
 
     message = create_message(
         sender=sender_email,
@@ -46,3 +51,7 @@ def send_otp_email(to_email: str, otp: str):
     )
     try:
         sent_message = service.users().messages().send(userId='me', body=message).execute()
+        logging.info(f"Message sent, ID: {sent_message['id']}")
+    except Exception as e:
+        logging.error(f"Failed to send OTP email: {e}")
+        raise
